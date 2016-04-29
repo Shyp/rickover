@@ -27,6 +27,8 @@ import (
 	"github.com/Shyp/rickover/services"
 )
 
+// The maximum data size that can be sent in the body of a HTTP request.
+// TODO(burke) use http.LimitedBytesReader
 const MAX_ENQUEUE_DATA_SIZE = 100 * 1024
 
 var disallowUnencryptedRequests = true
