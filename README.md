@@ -38,7 +38,9 @@ POST /v1/jobs
 }
 ```
 
-This returns a models.Job on success.
+This returns a [models.Job][job-type] on success.
+
+[job-type]: https://godoc.org/github.com/Shyp/rickover/models#Job
 
 #### Enqueue a new job
 
@@ -58,8 +60,8 @@ PUT /v1/jobs/invoice-shipments/job_282227eb-3c76-4ef7-af7e-25dff933077f
 ```
 
 This inserts a record into the `queued_jobs` table and returns a
-models.QueuedJob. Note the client generates the UUID, so the client can retry
-in the event of failure.
+[models.QueuedJob][queued-job]. Note the client generates the UUID, so the
+client can retry in the event of failure.
 
 You can put any valid JSON in the `data` field; we'll send this to the
 downstream worker.
@@ -69,6 +71,8 @@ this job can run (or `null` to indicate it can run any time), and `expires_at`
 indicates the latest possible time this job can run. If a job is dequeued after
 the `expires_at` date, we insert it immediately into the `archived_jobs` table
 with status `expired`.
+
+[queued-job]: https://godoc.org/github.com/Shyp/rickover/models#QueuedJob
 
 #### Record a job's success or failure
 
@@ -84,6 +88,9 @@ Note you must include the attempt number in your callback; we use this for
 idempotency, and to avoid stale writes.
 
 #### Replay a job
+
+This is handy if the initial job failed, or you want to re-run something on an
+adhoc basis.
 
 ```
 POST /v1/jobs/invoice-shipments/job_123/replay HTTP/1.1
@@ -103,11 +110,11 @@ returns whatever it finds. Note the fields in these tables don't match up 100%.
 ### Server Authentication
 
 By default the server uses a shared secret for authentication. Call
-`server.AddUser` to add an authenticated user and password for the
-DefaultServer.
+[`server.AddUser`][add-user] to add an authenticated user and password for the
+[DefaultServer][default-server].
 
 You can use your own authentication scheme with any code that satisifies the
-server.Authorizer interface:
+[server.Authorizer][authorizer] interface:
 
 ```go
 // Authorizer can authorize the given user and token to access the API.
@@ -119,14 +126,20 @@ type Authorizer interface {
 Then, get a http.Handler with your authorizer by calling
 
 ```go
+import "github.com/Shyp/rickover/server"
+
 handler := server.Get(authorizer)
 http.ListenAndServe(":9090", handler)
 ```
 
+[add-user]: https://godoc.org/github.com/Shyp/rickover/server#AddUser
+[default-server]: https://godoc.org/github.com/Shyp/rickover/server#pkg-variables
+[authorizer]: https://godoc.org/github.com/Shyp/rickover/server#Authorizer
+
 ## Processing jobs
 
 When you get a job, you can do whatever you want - your dequeuer just needs to
-satisfy the Worker interface.
+satisfy the [Worker][worker] interface.
 
 ```go
 // A Worker does some work with a QueuedJob.
@@ -135,9 +148,12 @@ type Worker interface {
 }
 ```
 
-A default Worker is provided as services.JobProcessor, which makes an API
-request to a downstream service. The default client is downstream.Client.
-You'll need to set the URL, username and password for the downstream service:
+[worker]: https://godoc.org/github.com/Shyp/rickover/dequeuer#Worker
+
+A default Worker is provided as [services.JobProcessor][job-processor],
+which makes an API request to a downstream service. The default client is
+[downstream.Client][downstream-client]. You'll need to set the URL, username
+and password for the downstream service:
 
 ```go
 import "github.com/Shyp/rickover/dequeuer"
@@ -157,21 +173,25 @@ func main() {
 }
 ```
 
-The downstream.Client will make a POST request to `/v1/jobs/:job-name/:job-id`:
+[job-processor]: https://godoc.org/github.com/Shyp/rickover/services#JobProcessor
+[downstream-client]: https://godoc.org/github.com/Shyp/rickover/downstream#Client
 
-    ```
-    POST /v1/jobs/invoice-shipment/job_123 HTTP/1.1
-    Host: worker.shyp.com
-    Content-Type: application/json
-    Accept: application/json
-    {
-        "data": {
-            "shipmentId": "shp_123"
-        },
-        "id": "job_123",
-        "attempt": 3
-    }
-    ```
+The [downstream.Client][downstream-client] will make a POST request to
+`/v1/jobs/:job-name/:job-id`:
+
+```
+POST /v1/jobs/invoice-shipment/job_123 HTTP/1.1
+Host: worker.shyp.com
+Content-Type: application/json
+Accept: application/json
+{
+    "data": {
+        "shipmentId": "shp_123"
+    },
+    "id": "job_123",
+    "attempt": 3
+}
+```
 
 ## Callbacks
 
