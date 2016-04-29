@@ -24,3 +24,9 @@ test:
 race-test:
 	@DATABASE_URL=$(DATABASE_URL) go test -race -v ./config/... ./dequeuer/... ./downstream/... ./models/... ./rest/... ./server/... ./services/... ./setup/... -timeout 2s
 	@DATABASE_URL=$(DATABASE_URL) DEPLOYMENT_NAME=test go test -race -p 1 -v ./test/... -timeout 2s
+
+serve:
+	go run commands/server/main.go
+
+dequeue:
+	go run commands/dequeuer/main.go

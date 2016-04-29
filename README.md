@@ -28,7 +28,6 @@ job type. Define a job type with a name, a delivery strategy (idempotent ==
 "at_least_once", not idempotent == "at_most_once"), and a concurrency - the
 maximum number of jobs that can be in flight. If the job is idempotent, you can
 add "attempts" - the number of times to try to dequeue the job.
-
 ```
 POST /v1/jobs
 {
@@ -282,27 +281,6 @@ Example server and dequeuer instances are stored in commands/server and
 commands/dequeuer. You will probably want to change these to provide your own
 authentication scheme.
 
-## Local development
-
-### Start the server
-
-```
-make serve
-```
-
-Will start the example server on port 8080.
-
-### Start the dequeuer
-
-```
-make serve-worker
-```
-
-Will try to pull jobs out of the database and send them to the downstream
-worker. Note you will need to set `DOWNSTREAM_WORKER_AUTH` as the basic auth
-password for the downstream service (the user is hardcoded to "jobs"), and
-`DOWNSTREAM_URL` as the URL to hit when you have a job to dequeue.
-
 ## Configure the server
 
 You can use the following variables to tune the server:
@@ -332,11 +310,36 @@ busy loop asking for work with a `SELECT ... FOR UPDATE`, which skips rows
 if they are active, so queries from the worker tend to cause more active
 connections than those from the server.
 
+- `DATABASE_URL` - Postgres database URL. Currently only connections to the
+  primary are allowed, there are not a lot of reads in the system, and all
+  queries are designed to be short.
+
 - `DOWNSTREAM_URL` - When you dequeue a job, hit this URL to tell something to
   do some work.
 
 - `DOWNSTREAM_WORKER_AUTH` - Basic auth password for the downstream service
   (user is "jobs").
+
+## Local development
+
+### Start the server
+
+```
+make serve
+```
+
+Will start the example server on port 8080.
+
+### Start the dequeuer
+
+```
+make dequeue
+```
+
+Will try to pull jobs out of the database and send them to the downstream
+worker. Note you will need to set `DOWNSTREAM_WORKER_AUTH` as the basic auth
+password for the downstream service (the user is hardcoded to "jobs"), and
+`DOWNSTREAM_URL` as the URL to hit when you have a job to dequeue.
 
 ## Debugging variables
 
