@@ -1,3 +1,13 @@
+// A client for a downstream HTTP service that can do work.
+//
+// Once the dequeuer takes jobs out of the database, it needs to do some work
+// and then report whether the work was successful or not. We do this by making
+// a HTTP request to a downstream service that doesn't have any state built in,
+// it just performs work when it's told to do so.
+//
+// This package contains a client for making requests to that downstream
+// service. For example usage, check the example in this file or JobProcessor
+// in the services package.
 package downstream
 
 import (

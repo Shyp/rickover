@@ -6,7 +6,9 @@ import (
 	"github.com/Shyp/rickover/Godeps/_workspace/src/github.com/Shyp/go-types"
 )
 
-func ExampleClient() {
+// Create a new client, then make a request to a downstream service with an
+// empty data object.
+func Example() {
 	client := NewClient("test", "hymanrickover", "http://downstream-server.example.com")
 	params := JobParams{
 		Data:     json.RawMessage([]byte("{}")),
