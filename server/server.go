@@ -74,6 +74,8 @@ func Get(a Authorizer) http.Handler {
 	h.Handler(regexp.MustCompile("^/debug/pprof/symbol$"), []string{"GET"}, authHandler(http.HandlerFunc(pprof.Symbol), a))
 	h.Handler(regexp.MustCompile("^/debug/pprof/trace$"), []string{"GET"}, authHandler(http.HandlerFunc(pprof.Trace), a))
 
+	h.Handler(regexp.MustCompile("^/$"), []string{"GET"}, authHandler(http.HandlerFunc(renderHomepage), a))
+
 	return debugRequestBodyHandler(
 		serverHeaderHandler(
 			forbidNonTLSTrafficHandler(h),
@@ -89,10 +91,14 @@ func init() {
 func serverHeaderHandler(h http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// hack, figure out how to put middleware on a subset of responses
-		if !strings.Contains(r.URL.Path, "/debug/pprof") {
+		if strings.Contains(r.URL.Path, "/debug/pprof") {
+			w.Header().Set("Content-Type", "text/plain; charset=utf-8")
+		} else if r.URL.Path == "/" {
+			w.Header().Set("Content-Type", "text/html; charset=utf-8")
+		} else {
 			w.Header().Set("Content-Type", "application/json; charset=utf-8")
 		}
-		w.Header().Set("Server", fmt.Sprintf("jobs-server/%s", config.Version))
+		w.Header().Set("Server", fmt.Sprintf("rickover/%s", config.Version))
 		h.ServeHTTP(w, r)
 	})
 }

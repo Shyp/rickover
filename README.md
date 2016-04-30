@@ -26,8 +26,9 @@ The only supported content type for uploads and responses is JSON.
 Before you can start enqueueing and dequeueing work, you need to create a
 job type. Define a job type with a name, a delivery strategy (idempotent ==
 "at_least_once", not idempotent == "at_most_once"), and a concurrency - the
-maximum number of jobs that can be in flight. If the job is idempotent, you can
-add "attempts" - the number of times to try to dequeue the job.
+maximum number of jobs that can be in flight at once. If the job is idempotent,
+you can add "attempts" - the number of times to try to dequeue the job.
+
 ```
 POST /v1/jobs
 {
@@ -60,14 +61,13 @@ PUT /v1/jobs/invoice-shipments/job_282227eb-3c76-4ef7-af7e-25dff933077f
 ```
 
 This inserts a record into the `queued_jobs` table and returns a
-[models.QueuedJob][queued-job]. Note the client generates the UUID, so the
-client can retry in the event of failure.
+[models.QueuedJob][queued-job]. The client can retry in the event of failure.
 
 You can put any valid JSON in the `data` field; we'll send this to the
 downstream worker.
 
-There are two special fields - `run_after` indicates the earliest possible time
-this job can run (or `null` to indicate it can run any time), and `expires_at`
+There are two special fields - `run_after` indicates the earliest possible
+time this job can run (or `null` to indicate it can run now), and `expires_at`
 indicates the latest possible time this job can run. If a job is dequeued after
 the `expires_at` date, we insert it immediately into the `archived_jobs` table
 with status `expired`.
@@ -138,8 +138,8 @@ http.ListenAndServe(":9090", handler)
 
 ## Processing jobs
 
-When you get a job, you can do whatever you want - your dequeuer just needs to
-satisfy the [Worker][worker] interface.
+When you get a job, you can do whatever you want with it - your dequeuer just
+needs to satisfy the [Worker][worker] interface.
 
 ```go
 // A Worker does some work with a QueuedJob.
@@ -221,6 +221,14 @@ out after 5 minutes and mark the job as failed.
 If the dequeuer gets killed while waiting for a response, we'll time out the
 job after 7 minutes, and mark it as failed. (This means the maximum allowable
 time for a job is 7 minutes.)
+
+## Dashboard
+
+The homepage can embed an iframe of your choice, configurable via the
+`HOMEPAGE_IFRAME_URL` environment variable. We set up a Librato space with the
+metrics we send from this service, and embed that in the homepage:
+
+<img src="https://monosnap.com/file/nr399cxUwpBkEk5gAjJ5hTG4c3aR9J.png">
 
 #### Stuck jobs
 
@@ -311,7 +319,7 @@ Foreign-key constraints:
 ## Example servers and dequeuers
 
 Example server and dequeuer instances are stored in commands/server and
-commands/dequeuer. You will probably want to change these to provide your own
+commands/dequeuer. You will probably want to modify these to provide your own
 authentication scheme.
 
 ## Configure the server
@@ -319,9 +327,9 @@ authentication scheme.
 You can use the following variables to tune the server:
 
 - `PG_SERVER_POOL_SIZE` - Maximum number of database connections from an
-individual instance. Across every database connection in the cluster, you
-want to have the number of active Postgres connections equal to 2*CPUs on the
-Postgres machine. Currently set to 15.
+individual instance. Across every database connection in the cluster, you want
+to have the number of active Postgres connections equal to 2 * (num CPUs on the
+Postgres machine). Currently set to 15.
 
 - `PORT` - which port to listen on.
 
@@ -456,7 +464,7 @@ about the optimal number for peak performance.
 In the cluster I was able to dequeue 7,000 jobs per minute with a single $25
 web node, a $25 dequeuer node, a $50 database and a $25 Node.js worker. The
 first place I would look to improve this would be to increase the number of
-Node dynos.
+Node (downstream) dynos.
 
 I used [`boom`][boom] for enqueuing jobs; I turned off the dequeuer, enqueued
 30000 jobs, then started the dequeuer and measured the timestamp difference
@@ -471,9 +479,25 @@ boom -n 30000 -c 100 -d '{"data": {"user-agent": "boom"}}' -m PUT http://localho
 
 [boom]: https://github.com/rakyll/boom
 
+## Single points of failure
+
+This project has two points of failure:
+
+- If the database goes down, you can't enqueue any new jobs, or process
+any work. This is acceptable for most companies and projects. If this is
+unacceptable you may want to check out a distributed scheduler like Chronos, or
+use something else for the job queue, like SQS.
+
+- If the dequeuer goes down, you can't process any work. You can run multiple
+dequeuers, or manually split the single concurrency value across multiple
+machines, or just wait until the machine comes back up again. Note if the
+dequeuer goes down you can still enqueue jobs, the database queue will continue
+to grow.
+
 ## Suggestions for scaling the project
 
-This should hopefully be sufficient for Shyp for a few years at least.
+- Pull jobs out of the database in batches, and send them to the dequeuers over
+channels.
 
 - Use it only as a scheduler, and move the job queue to SQS or something else.
 
@@ -483,7 +507,7 @@ This should hopefully be sufficient for Shyp for a few years at least.
 - Run the worker on multiple machines, and ignore or update the concurrency
   guarantees.
 
-- Run shyp-worker-<realm> on a larger number of machines.
+- Run the downstream worker on a larger number of machines.
 
 - Shard the Postgres database so jobs A-M are in one database, and N-Z are in
 another. Would need to update `db.Conn` to be an interface, or wrap it behind a
