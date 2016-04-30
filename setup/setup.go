@@ -1,4 +1,4 @@
-// Setup helps initialize applications.
+// Package setup helps initialize the database and all queries.
 package setup
 
 import (
