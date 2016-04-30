@@ -355,6 +355,27 @@ connections than those from the server.
 
 ## Local development
 
+We use [goose][goose] for database migrations. The test database is
+`rickover_test` and the development database is `rickover`. The authenticating
+user is `rickover`.
+
+To run all migrations, run:
+
+```
+goose --env=test up
+```
+
+To get the database status:
+
+```
+goose --env=test status
+```
+
+You should also be able to use goose to run migrations in your production
+environment.
+
+[goose]: https://bitbucket.org/liamstask/goose
+
 ### Start the server
 
 ```
