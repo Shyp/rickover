@@ -5,7 +5,6 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
-	"os"
 	"sync"
 	"time"
 
@@ -32,46 +31,6 @@ SELECT count(*) FROM pg_stat_activity
 WHERE state='active'
 	`)
 	return
-}
-
-// DefaultConnection connects to a Postgres database using the DATABASE_URL
-// environment variable.
-var DefaultConnection = &DatabaseURLConnector{}
-
-// DatabaseURLConnector connects to the database using the DATABASE_URL
-// environment variable.
-type DatabaseURLConnector struct {
-	mu sync.Mutex
-}
-
-// Connect to the database using the DATABASE_URL environment variable with the
-// given number of database connections, and store the result in conn.
-func (dc *DatabaseURLConnector) Connect(conn *sql.DB, dbConns int) error {
-	dc.mu.Lock()
-	defer dc.mu.Unlock()
-	if conn == nil {
-		return errors.New("setup: Cannot assign to nil conn")
-	}
-	url := os.Getenv("DATABASE_URL")
-	if url == "" {
-		return errors.New("setup: No value provided for DATABASE_URL, cannot connect")
-	}
-	d, err := sql.Open("postgres", url)
-	if err != nil {
-		return err
-	}
-	d.SetMaxOpenConns(dbConns)
-	if dbConns > 100 {
-		d.SetMaxIdleConns(dbConns - 20)
-	} else if dbConns > 50 {
-		d.SetMaxIdleConns(dbConns - 10)
-	} else if dbConns > 10 {
-		d.SetMaxIdleConns(dbConns - 3)
-	} else if dbConns > 5 {
-		d.SetMaxIdleConns(dbConns - 2)
-	}
-	*conn = *d
-	return nil
 }
 
 func GetActiveQueries() (count int64, err error) {

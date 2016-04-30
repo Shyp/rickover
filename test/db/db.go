@@ -9,7 +9,7 @@ import (
 )
 
 func SetUp(t *testing.T) {
-	if err := setup.DB(setup.DefaultConnection, 10); err != nil {
+	if err := setup.DB(db.DefaultConnection, 10); err != nil {
 		t.Fatal(err)
 	}
 }

@@ -14,6 +14,7 @@ import (
 	"github.com/Shyp/rickover/config"
 	"github.com/Shyp/rickover/dequeuer"
 	"github.com/Shyp/rickover/downstream"
+	"github.com/Shyp/rickover/models/db"
 	"github.com/Shyp/rickover/services"
 	"github.com/Shyp/rickover/setup"
 )
@@ -31,7 +32,7 @@ func main() {
 		dbConns = 20
 	}
 
-	err = setup.DB(setup.DefaultConnection, dbConns)
+	err = setup.DB(db.DefaultConnection, dbConns)
 	checkError(err)
 
 	go setup.MeasureActiveQueries(1 * time.Second)

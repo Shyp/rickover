@@ -15,6 +15,7 @@ import (
 	"github.com/Shyp/rickover/Godeps/_workspace/src/github.com/Shyp/go-simple-metrics"
 	"github.com/Shyp/rickover/Godeps/_workspace/src/github.com/gorilla/handlers"
 	"github.com/Shyp/rickover/config"
+	"github.com/Shyp/rickover/models/db"
 	"github.com/Shyp/rickover/server"
 	"github.com/Shyp/rickover/setup"
 )
@@ -26,7 +27,7 @@ func configure() (http.Handler, error) {
 		dbConns = 10
 	}
 
-	if err = setup.DB(setup.DefaultConnection, dbConns); err != nil {
+	if err = setup.DB(db.DefaultConnection, dbConns); err != nil {
 		return nil, err
 	}
 
