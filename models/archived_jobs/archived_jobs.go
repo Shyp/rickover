@@ -18,7 +18,7 @@ import (
 const Prefix = "job_"
 
 // ErrNotFound indicates that the archived job was not found.
-var ErrNotFound = errors.New("Queued job not found")
+var ErrNotFound = errors.New("Archived job not found")
 
 var createStmt *sql.Stmt
 var getStmt *sql.Stmt
