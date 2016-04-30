@@ -222,6 +222,19 @@ If the dequeuer gets killed while waiting for a response, we'll time out the
 job after 7 minutes, and mark it as failed. (This means the maximum allowable
 time for a job is 7 minutes.)
 
+#### Stuck jobs
+
+If a dequeuer gets restarted after it's Acquire()d a job but before it can send
+it downstream, or if the downstream worker gets restarted before it can hit the
+callback, the job can get stuck in-progress indefinitely. Run WatchStuckJobs in
+a goroutine to periodically check for in-progress jobs and mark them as failed:
+
+```go
+// This should be longer than the timeout in the JobProcessor
+stuckJobTimeout := 7 * time.Minute
+go services.WatchStuckJobs(1*time.Minute, stuckJobTimeout)
+```
+
 ## Database Table Layout
 
 There are three tables.

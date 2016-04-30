@@ -39,6 +39,10 @@ func main() {
 	go setup.MeasureQueueDepth(5 * time.Second)
 	go setup.MeasureInProgressJobs(1 * time.Second)
 
+	// Every minute, check for in-progress jobs that haven't been updated for
+	// 7 minutes, and mark them as failed.
+	go services.WatchStuckJobs(1*time.Minute, 7*time.Minute)
+
 	// We're going to make a lot of requests to the same downstream service.
 	httpConns, err := config.GetInt("HTTP_MAX_IDLE_CONNS")
 	if err == nil {
