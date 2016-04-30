@@ -5,7 +5,7 @@ import (
 	"regexp"
 )
 
-func ExampleRegexHandler() {
+func ExampleRegexpHandler() {
 	// GET /v1/jobs/:job-name
 	route := regexp.MustCompile(`^/v1/jobs/(?P<JobName>[^\s\/]+)$`)
 
