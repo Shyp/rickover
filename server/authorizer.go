@@ -22,7 +22,8 @@ func AddUser(user string, password string) {
 // to access the API.
 type Authorizer interface {
 	// Authorize returns nil if the user and token are allowed to access the
-	// API, and an error otherwise.
+	// API, and a rest.Error otherwise. The rest.Error will be returned as the
+	// body of a 401 HTTP response.
 	Authorize(user string, token string) *rest.Error
 }
 
@@ -47,6 +48,8 @@ func (ssa *SharedSecretAuthorizer) AddUser(userId string, password string) {
 	ssa.allowedUsers[userId] = password
 }
 
+// Authorize returns nil if the userId and token have been added to c, and
+// a rest.Error if they are not allowed to access the API.
 func (c *SharedSecretAuthorizer) Authorize(userId string, token string) *rest.Error {
 	serverPass, ok := c.allowedUsers[userId]
 	if !ok {
