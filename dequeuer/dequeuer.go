@@ -84,6 +84,18 @@ type Dequeuer struct {
 // A Worker does some work with a QueuedJob. Worker implementations may be
 // shared and should be threadsafe.
 type Worker interface {
+	// DoWork does whatever work should be done with the queued
+	// job. Success and failure for the job are marked by hitting
+	// services.HandleStatusCallback, or POST /v1/jobs/:job-name/:job-id
+	// (over HTTP).
+	//
+	// A good pattern is for DoWork to make a HTTP request to a downstream
+	// service, and then for that service to make a HTTP callback to report
+	// success or failure.
+	//
+	// If DoWork is unable to get the work to be done, it should call
+	// HandleStatusCallback with a failed callback; errors are logged, but
+	// otherwise nothing else is done with them.
 	DoWork(*models.QueuedJob) error
 }
 
