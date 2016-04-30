@@ -30,3 +30,9 @@ serve:
 
 dequeue:
 	go run commands/dequeuer/main.go
+
+release:
+	go get github.com/Shyp/bump_version
+	bump_version minor config/config.go
+	git push origin master
+	git push origin master --tags
