@@ -1,11 +1,11 @@
 package server
 
 import (
+	"html/template"
 	"net/http"
 	"os"
 
 	"github.com/Shyp/rickover/config"
-	"github.com/alecthomas/template"
 )
 
 var data = homepageData{
