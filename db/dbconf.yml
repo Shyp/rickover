@@ -10,6 +10,10 @@ circle:
     driver: postgres
     open: user=ubuntu dbname=circle_test sslmode=disable
 
+travis:
+    driver: postgres
+    open: user=rickover dbname=rickover_test sslmode=disable
+
 int:
     driver: postgres
     open: $DATABASE_URL
