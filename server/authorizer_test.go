@@ -9,7 +9,7 @@ import (
 func TestAddUserAuthsUser(t *testing.T) {
 	AddUser("foo", "bar")
 	err := DefaultAuthorizer.Authorize("foo", "bar")
-	test.AssertNotError(t, err, "")
+	test.Assert(t, err == nil, "")
 
 	err = DefaultAuthorizer.Authorize("foo", "wrongpassword")
 	test.AssertError(t, err, "")

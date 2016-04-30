@@ -72,7 +72,7 @@ func main() {
 	for _, p := range pools {
 		if p != nil {
 			wg.Add(1)
-			go func(p dequeuer.Pool) {
+			go func(p *dequeuer.Pool) {
 				err = p.Shutdown()
 				if err != nil {
 					log.Printf("Error shutting down pool: %s\n", err.Error())

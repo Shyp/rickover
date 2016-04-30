@@ -12,18 +12,22 @@ import (
 
 var DefaultAuthorizer = NewSharedSecretAuthorizer()
 
-// AddUser allows a given user and password to access the API.
+// AddUser tells the DefaultAuthorizer that a given user and password is
+// allowed to access the API.
 func AddUser(user string, password string) {
 	DefaultAuthorizer.AddUser(user, password)
 }
 
-// Authorizer can authorize the given user and token to access the API.
+// The Authorizer interface can be used to authorize a given user and token
+// to access the API.
 type Authorizer interface {
-	Authorize(user string, token string) error
+	// Authorize returns nil if the user and token are allowed to access the
+	// API, and an error otherwise.
+	Authorize(user string, token string) *rest.Error
 }
 
-// SharedSecretAuthorizer uses an in-memory usernames and passwords to
-// validate users.
+// SharedSecretAuthorizer uses an in-memory map of usernames and passwords to
+// authenticate incoming requests.
 type SharedSecretAuthorizer struct {
 	allowedUsers map[string]string
 	mu           sync.Mutex
@@ -43,7 +47,7 @@ func (ssa *SharedSecretAuthorizer) AddUser(userId string, password string) {
 	ssa.allowedUsers[userId] = password
 }
 
-func (c *SharedSecretAuthorizer) Authorize(userId string, token string) error {
+func (c *SharedSecretAuthorizer) Authorize(userId string, token string) *rest.Error {
 	serverPass, ok := c.allowedUsers[userId]
 	if !ok {
 		if userId == "" {
@@ -73,7 +77,7 @@ type forbiddenAuthorizer struct {
 	Token  string
 }
 
-func (f *forbiddenAuthorizer) Authorize(userId string, token string) error {
+func (f *forbiddenAuthorizer) Authorize(userId string, token string) *rest.Error {
 	f.UserId = userId
 	f.Token = token
 	return &rest.Error{
@@ -85,7 +89,7 @@ func (f *forbiddenAuthorizer) Authorize(userId string, token string) error {
 // Use this if you need to bypass the API authorization scheme.
 type UnsafeBypassAuthorizer struct{}
 
-func (u *UnsafeBypassAuthorizer) Authorize(userId string, token string) error {
+func (u *UnsafeBypassAuthorizer) Authorize(userId string, token string) *rest.Error {
 	return nil
 }
 
