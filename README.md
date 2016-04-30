@@ -479,6 +479,15 @@ boom -n 30000 -c 100 -d '{"data": {"user-agent": "boom"}}' -m PUT http://localho
 
 [boom]: https://github.com/rakyll/boom
 
+## Supported versions
+
+The database uses `jsonb`, which is only available in Postgres 9.4 and beyond.
+The Go server exposes `http/pprof/trace`, which is only available in Go 1.5 and
+beyond.
+
+You can probably fork the project to remove the http/pprof handlers and replace
+jsonb with json and it should compile/run fine.
+
 ## Single points of failure
 
 This project has two points of failure:
