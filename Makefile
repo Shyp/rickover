@@ -10,8 +10,8 @@ endif
 
 test-install:
 	-createuser rickover --superuser --createrole --createdb --inherit
-	-createdb rickover --owner=shyp_jobs
-	-createdb rickover_test --owner=shyp_jobs
+	-createdb rickover --owner=rickover
+	-createdb rickover_test --owner=rickover
 
 build:
 	go build ./...
