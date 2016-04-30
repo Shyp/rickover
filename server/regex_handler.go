@@ -4,7 +4,6 @@ package server
 
 import (
 	"encoding/json"
-	"log"
 	"net/http"
 	"regexp"
 	"strings"
@@ -16,18 +15,14 @@ type route struct {
 	handler http.Handler
 }
 
-func buildRoute(regex string) *regexp.Regexp {
-	route, err := regexp.Compile(regex)
-	if err != nil {
-		log.Fatal(err)
-	}
-	return route
-}
-
+// A RegexpHandler is a simple http.Handler that can match regular expressions
+// for routes.
 type RegexpHandler struct {
 	routes []*route
 }
 
+// Handler calls the provided handler for requests whose URL matches the given
+// pattern and HTTP method. The first matching route will get called.
 func (h *RegexpHandler) Handler(pattern *regexp.Regexp, methods []string, handler http.Handler) {
 	h.routes = append(h.routes, &route{
 		pattern: pattern,
@@ -36,6 +31,8 @@ func (h *RegexpHandler) Handler(pattern *regexp.Regexp, methods []string, handle
 	})
 }
 
+// Handler calls the provided HandlerFunc for requests whose URL matches the
+// given pattern and HTTP method. The first matching route will get called.
 func (h *RegexpHandler) HandleFunc(pattern *regexp.Regexp, methods []string, handler func(http.ResponseWriter, *http.Request)) {
 	h.routes = append(h.routes, &route{
 		pattern: pattern,
@@ -44,6 +41,9 @@ func (h *RegexpHandler) HandleFunc(pattern *regexp.Regexp, methods []string, han
 	})
 }
 
+// ServeHTTP checks all registered routes in turn for a match, and calls
+// ServeHTTP on the first matching handler. If no routes match,
+// StatusMethodNotAllowed will be rendered.
 func (h *RegexpHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	for _, route := range h.routes {
 		if route.pattern.MatchString(r.URL.Path) {

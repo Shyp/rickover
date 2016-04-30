@@ -12,6 +12,7 @@ import (
 	"net/http/httputil"
 	"net/http/pprof"
 	"os"
+	"regexp"
 	"strings"
 	"time"
 
@@ -38,28 +39,28 @@ var disallowUnencryptedRequests = true
 var DefaultServer http.Handler
 
 // POST /v1/jobs(/:name)/:id/replay
-var replayRoute = buildRoute(`^/v1/jobs(/(?P<JobName>[^\s\/]+))?/(?P<id>job_[^\s\/]+)/replay$`)
+var replayRoute = regexp.MustCompile(`^/v1/jobs(/(?P<JobName>[^\s\/]+))?/(?P<id>job_[^\s\/]+)/replay$`)
 
 // GET /v1/jobs/job_123
 //
 // Must go before the getJobTypeRoute
-var getJobRoute = buildRoute(`^/v1/jobs/(?P<id>job_[^\s\/]+)$`)
+var getJobRoute = regexp.MustCompile(`^/v1/jobs/(?P<id>job_[^\s\/]+)$`)
 
 // GET/POST /v1/jobs
-var jobsRoute = buildRoute("^/v1/jobs$")
+var jobsRoute = regexp.MustCompile("^/v1/jobs$")
 
 // GET/POST/PUT /v1/jobs/:name/:id
-var jobIdRoute = buildRoute(`^/v1/jobs/(?P<JobName>[^\s\/]+)/(?P<id>job_[^\s\/]+|random_id)$`)
+var jobIdRoute = regexp.MustCompile(`^/v1/jobs/(?P<JobName>[^\s\/]+)/(?P<id>job_[^\s\/]+|random_id)$`)
 
 // GET /v1/jobs/:job-name
-var getJobTypeRoute = buildRoute(`^/v1/jobs/(?P<JobName>[^\s\/]+)$`)
+var getJobTypeRoute = regexp.MustCompile(`^/v1/jobs/(?P<JobName>[^\s\/]+)$`)
 
 // Get returns a http.Handler with all routes initialized using the given
 // Authorizer.
 func Get(a Authorizer) http.Handler {
 	h := new(RegexpHandler)
 
-	h.Handler(jobsRoute, []string{"POST"}, authHandler(CreateJob(), a))
+	h.Handler(jobsRoute, []string{"POST"}, authHandler(createJob(), a))
 	h.Handler(getJobRoute, []string{"GET"}, authHandler(handleJobRoute(), a))
 	h.Handler(getJobTypeRoute, []string{"GET"}, authHandler(getJobType(), a))
 
@@ -67,11 +68,11 @@ func Get(a Authorizer) http.Handler {
 
 	h.Handler(replayRoute, []string{"POST"}, authHandler(replayHandler(), a))
 
-	h.Handler(buildRoute("^/debug/pprof$"), []string{"GET"}, authHandler(http.HandlerFunc(pprof.Index), a))
-	h.Handler(buildRoute("^/debug/pprof/cmdline$"), []string{"GET"}, authHandler(http.HandlerFunc(pprof.Cmdline), a))
-	h.Handler(buildRoute("^/debug/pprof/profile$"), []string{"GET"}, authHandler(http.HandlerFunc(pprof.Profile), a))
-	h.Handler(buildRoute("^/debug/pprof/symbol$"), []string{"GET"}, authHandler(http.HandlerFunc(pprof.Symbol), a))
-	h.Handler(buildRoute("^/debug/pprof/trace$"), []string{"GET"}, authHandler(http.HandlerFunc(pprof.Trace), a))
+	h.Handler(regexp.MustCompile("^/debug/pprof$"), []string{"GET"}, authHandler(http.HandlerFunc(pprof.Index), a))
+	h.Handler(regexp.MustCompile("^/debug/pprof/cmdline$"), []string{"GET"}, authHandler(http.HandlerFunc(pprof.Cmdline), a))
+	h.Handler(regexp.MustCompile("^/debug/pprof/profile$"), []string{"GET"}, authHandler(http.HandlerFunc(pprof.Profile), a))
+	h.Handler(regexp.MustCompile("^/debug/pprof/symbol$"), []string{"GET"}, authHandler(http.HandlerFunc(pprof.Symbol), a))
+	h.Handler(regexp.MustCompile("^/debug/pprof/trace$"), []string{"GET"}, authHandler(http.HandlerFunc(pprof.Trace), a))
 
 	return debugRequestBodyHandler(
 		serverHeaderHandler(
@@ -195,9 +196,9 @@ func getJobType() http.Handler {
 
 // POST /v1/jobs
 //
-// CreateJob returns a http.HandlerFunc that responds to job creation requests
+// createJob returns a http.HandlerFunc that responds to job creation requests
 // using the given authorizer interface.
-func CreateJob() http.Handler {
+func createJob() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.Body == nil {
 			badRequest(w, r, createEmptyErr("name", r.URL.Path))

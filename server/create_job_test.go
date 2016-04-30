@@ -15,13 +15,13 @@ import (
 	"github.com/Shyp/rickover/test/db"
 )
 
+var u = &UnsafeBypassAuthorizer{}
+
 func Test405WrongMethod(t *testing.T) {
 	t.Parallel()
 	w := httptest.NewRecorder()
 	req, err := http.NewRequest("GET", "/v1/jobs", nil)
-	if err != nil {
-		t.Fatal(err)
-	}
+	test.AssertNotError(t, err, "")
 	DefaultServer.ServeHTTP(w, req)
 	test.AssertEquals(t, w.Code, http.StatusMethodNotAllowed)
 	var e rest.Error
@@ -37,10 +37,9 @@ func Test400MissingId(t *testing.T) {
 	t.Parallel()
 	w := httptest.NewRecorder()
 	req, err := http.NewRequest("POST", "/v1/jobs", nil)
-	if err != nil {
-		t.Fatal(err)
-	}
-	CreateJob().ServeHTTP(w, req)
+	test.AssertNotError(t, err, "")
+	req.SetBasicAuth("foo", "bar")
+	Get(u).ServeHTTP(w, req)
 	test.AssertEquals(t, w.Code, http.StatusBadRequest)
 	var e rest.Error
 	err = json.Unmarshal(w.Body.Bytes(), &e)
@@ -61,16 +60,13 @@ func Test400MissingStrategy(t *testing.T) {
 	}
 	json.NewEncoder(b).Encode(body)
 	req, err := http.NewRequest("POST", "/v1/jobs", b)
-	if err != nil {
-		t.Fatal(err)
-	}
-	CreateJob().ServeHTTP(w, req)
+	test.AssertNotError(t, err, "")
+	req.SetBasicAuth("foo", "bar")
+	Get(u).ServeHTTP(w, req)
 	test.AssertEquals(t, w.Code, http.StatusBadRequest)
 	var e rest.Error
 	err = json.Unmarshal(w.Body.Bytes(), &e)
-	if err != nil {
-		t.Fatal(err)
-	}
+	test.AssertNotError(t, err, "")
 	test.AssertEquals(t, e.Title, "Missing required field: delivery_strategy")
 	test.AssertEquals(t, e.Id, "missing_parameter")
 }
@@ -85,16 +81,13 @@ func Test400InvalidStrategy(t *testing.T) {
 	}
 	json.NewEncoder(b).Encode(body)
 	req, err := http.NewRequest("POST", "/v1/jobs", b)
-	if err != nil {
-		t.Fatal(err)
-	}
-	CreateJob().ServeHTTP(w, req)
+	test.AssertNotError(t, err, "")
+	req.SetBasicAuth("foo", "bar")
+	Get(u).ServeHTTP(w, req)
 	test.AssertEquals(t, w.Code, http.StatusBadRequest)
 	var e rest.Error
 	err = json.Unmarshal(w.Body.Bytes(), &e)
-	if err != nil {
-		t.Fatal(err)
-	}
+	test.AssertNotError(t, err, "")
 	test.AssertEquals(t, e.Title, "Invalid delivery strategy: foo")
 	test.AssertEquals(t, e.Id, "invalid_delivery_strategy")
 }
@@ -110,16 +103,13 @@ func Test400AtMostOnceAndAttempts(t *testing.T) {
 	}
 	json.NewEncoder(b).Encode(body)
 	req, err := http.NewRequest("POST", "/v1/jobs", b)
-	if err != nil {
-		t.Fatal(err)
-	}
-	CreateJob().ServeHTTP(w, req)
+	test.AssertNotError(t, err, "")
+	req.SetBasicAuth("foo", "bar")
+	Get(u).ServeHTTP(w, req)
 	test.AssertEquals(t, w.Code, http.StatusBadRequest)
 	var e rest.Error
 	err = json.Unmarshal(w.Body.Bytes(), &e)
-	if err != nil {
-		t.Fatal(err)
-	}
+	test.AssertNotError(t, err, "")
 	test.AssertEquals(t, e.Title, "Cannot set retry attempts to a number greater than 1 if the delivery strategy is at_most_once")
 }
 
@@ -132,10 +122,9 @@ func Test400AttemptsString(t *testing.T) {
 	test.AssertNotError(t, err, "")
 	json.NewEncoder(b).Encode(v)
 	req, err := http.NewRequest("POST", "/v1/jobs", b)
-	if err != nil {
-		t.Fatal(err)
-	}
-	CreateJob().ServeHTTP(w, req)
+	req.SetBasicAuth("foo", "bar")
+	test.AssertNotError(t, err, "")
+	Get(u).ServeHTTP(w, req)
 	test.AssertEquals(t, w.Code, http.StatusBadRequest)
 	var e rest.Error
 	err = json.Unmarshal(w.Body.Bytes(), &e)
@@ -154,16 +143,13 @@ func Test400ZeroAttempts(t *testing.T) {
 	}
 	json.NewEncoder(b).Encode(body)
 	req, err := http.NewRequest("POST", "/v1/jobs", b)
-	if err != nil {
-		t.Fatal(err)
-	}
-	CreateJob().ServeHTTP(w, req)
+	test.AssertNotError(t, err, "")
+	req.SetBasicAuth("foo", "bar")
+	Get(u).ServeHTTP(w, req)
 	test.AssertEquals(t, w.Code, http.StatusBadRequest)
 	var e rest.Error
 	err = json.Unmarshal(w.Body.Bytes(), &e)
-	if err != nil {
-		t.Fatal(err)
-	}
+	test.AssertNotError(t, err, "")
 	test.AssertEquals(t, e.Title, "Attempts must be set to a number greater than zero")
 }
 
@@ -179,7 +165,8 @@ func Test400ConcurrencyNotSet(t *testing.T) {
 	json.NewEncoder(b).Encode(body)
 	req, err := http.NewRequest("POST", "/v1/jobs", b)
 	test.AssertNotError(t, err, "")
-	CreateJob().ServeHTTP(w, req)
+	req.SetBasicAuth("foo", "bar")
+	Get(u).ServeHTTP(w, req)
 	test.AssertEquals(t, w.Code, http.StatusBadRequest)
 	var e rest.Error
 	err = json.Unmarshal(w.Body.Bytes(), &e)
