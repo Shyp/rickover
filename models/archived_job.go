@@ -7,6 +7,10 @@ import (
 	"github.com/Shyp/rickover/Godeps/_workspace/src/github.com/Shyp/go-types"
 )
 
+// An ArchivedJob is an in-memory representation of an archived job.
+//
+// ArchivedJob records are immutable, once they are stored in the database,
+// they are never written, updated, or moved back to the jobs table.
 type ArchivedJob struct {
 	Id        types.PrefixUUID `json:"id"`
 	Name      string           `json:"name"`

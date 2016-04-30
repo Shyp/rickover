@@ -42,9 +42,15 @@ type QueuedJob struct {
 // StrategyAtMostOnce.
 type DeliveryStrategy string
 
+// StrategyAtLeastOnce should be used for jobs that can be retried in the event
+// of failure.
 const StrategyAtLeastOnce = DeliveryStrategy("at_least_once")
+
+// StrategyAtMostOnce should be used for jobs that should not be retried in
+// the event of failure.
 const StrategyAtMostOnce = DeliveryStrategy("at_most_once")
 
+// Value implements the driver.Valuer interface.
 func (d DeliveryStrategy) Value() (driver.Value, error) {
 	return string(d), nil
 }
