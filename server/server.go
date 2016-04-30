@@ -282,6 +282,8 @@ func CreateJob() http.Handler {
 	})
 }
 
+// An EnqueueJobRequest is sent in the body of a request to PUT
+// /v1/jobs/:job-name/:job-id.
 type EnqueueJobRequest struct {
 	// Job data to enqueue.
 	Data json.RawMessage `json:"data"`
@@ -297,13 +299,13 @@ type EnqueueJobRequest struct {
 func handleJobRoute() http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == "POST" {
-			j := JobStatusUpdater{}
+			j := jobStatusUpdater{}
 			j.ServeHTTP(w, r)
 		} else if r.Method == "PUT" {
 			j := jobEnqueuer{}
 			j.ServeHTTP(w, r)
 		} else if r.Method == "GET" {
-			j := JobStatusGetter{}
+			j := jobStatusGetter{}
 			j.ServeHTTP(w, r)
 		} else {
 			w.WriteHeader(http.StatusMethodNotAllowed)
@@ -312,13 +314,13 @@ func handleJobRoute() http.HandlerFunc {
 	})
 }
 
-type JobStatusGetter struct{}
+type jobStatusGetter struct{}
 
 // GET /v1/jobs(/:name)/:id
 //
 // Try to find the given job in the queued_jobs table, then in the
 // archived_jobs table. Returns the job, or a 404 Not Found error.
-func (j *JobStatusGetter) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+func (j *jobStatusGetter) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	// Job type, will be set if the longer URL form, empty string otherwise.
 	var name string
 	var idStr string
@@ -378,21 +380,22 @@ func (j *JobStatusGetter) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 // jobStatusUpdater satisfies the Handler interface.
-type JobStatusUpdater struct{}
+type jobStatusUpdater struct{}
 
-// The body of a POST request to the JobStatusUpdater
+// The body of a POST request to /v1/jobs/:job-name/:job-id, recording the
+// status of a job.
 type JobStatusRequest struct {
+	// Should be "succeeded" or "failed".
 	Status models.JobStatus `json:"status"`
 
-	// Attempt is a pointer so we can distinguish between `null`/omitted value
-	// and 0
-	Attempt *uint8 `json:"attempt"`
+	// Attempt is sent to ensure we don't attempt a null write.
+	Attempt *uint8 `json:"attempt"` // pointer to distinguish between null/omitted value and 0.
 }
 
 // POST /v1/jobs/:name/:id
 //
 // Update a job's status with success or failure
-func (j *JobStatusUpdater) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+func (j *jobStatusUpdater) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if r.Body == nil {
 		badRequest(w, r, createEmptyErr("status", r.URL.Path))
 		return

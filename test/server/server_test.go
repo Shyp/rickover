@@ -17,9 +17,9 @@ import (
 	"github.com/Shyp/rickover/test/factory"
 )
 
-var testPassword = "XmTGoDTRyVd8HHiuzFtPzF8N&or7ETPaPVvWuR;d"
+var u = &server.UnsafeBypassAuthorizer{}
 
-var jsserver = server.JobStatusUpdater{}
+var testPassword = "XmTGoDTRyVd8HHiuzFtPzF8N&or7ETPaPVvWuR;d"
 
 func TestGoodRequestReturns200(t *testing.T) {
 	defer db.TearDown(t)
@@ -33,7 +33,8 @@ func TestGoodRequestReturns200(t *testing.T) {
 	b := new(bytes.Buffer)
 	json.NewEncoder(b).Encode(jsr)
 	req, _ := http.NewRequest("POST", "/v1/jobs/echo/job_6740b44e-13b9-475d-af06-979627e0e0d6", b)
-	jsserver.ServeHTTP(w, req)
+	req.SetBasicAuth("foo", "bar")
+	server.Get(u).ServeHTTP(w, req)
 	test.AssertEquals(t, w.Code, http.StatusOK)
 }
 
@@ -52,9 +53,8 @@ func TestCreateJobReturnsJob(t *testing.T) {
 	json.NewEncoder(b).Encode(validRequest)
 	req, err := http.NewRequest("POST", "/v1/jobs", b)
 	test.AssertNotError(t, err, "")
-	req.SetBasicAuth("usr_123", "tok_123")
-	s := new(server.UnsafeBypassAuthorizer)
-	server.Get(s).ServeHTTP(w, req)
+	req.SetBasicAuth("foo", "bar")
+	server.Get(u).ServeHTTP(w, req)
 	test.AssertEquals(t, w.Code, http.StatusCreated)
 	job := new(models.Job)
 	err = json.NewDecoder(w.Body).Decode(job)
@@ -75,9 +75,8 @@ func TestSuccessWritesDBRecord(t *testing.T) {
 	json.NewEncoder(b).Encode(validRequest)
 	req, err := http.NewRequest("POST", "/v1/jobs", b)
 	test.AssertNotError(t, err, "")
-	req.SetBasicAuth("usr_123", "tok_123")
-	s := new(server.UnsafeBypassAuthorizer)
-	server.Get(s).ServeHTTP(w, req)
+	req.SetBasicAuth("foo", "bar")
+	server.Get(u).ServeHTTP(w, req)
 	job, err := jobs.Get(validRequest.Name)
 	test.AssertNotError(t, err, "")
 	test.AssertEquals(t, job.Name, validRequest.Name)
@@ -96,8 +95,8 @@ func TestRetrieveJob(t *testing.T) {
 	factory.CreateQueuedJob(t, factory.EmptyData)
 	w := httptest.NewRecorder()
 	req, _ := http.NewRequest("GET", "/v1/jobs/echo/job_6740b44e-13b9-475d-af06-979627e0e0d6", nil)
-	j := server.JobStatusGetter{}
-	j.ServeHTTP(w, req)
+	req.SetBasicAuth("foo", "bar")
+	server.Get(u).ServeHTTP(w, req)
 	test.AssertEquals(t, w.Code, http.StatusOK)
 	var qj models.QueuedJob
 	err := json.NewDecoder(w.Body).Decode(&qj)
@@ -129,8 +128,8 @@ func TestRetrieveArchivedJob(t *testing.T) {
 	factory.CreateArchivedJob(t, factory.EmptyData, models.StatusSucceeded)
 	w := httptest.NewRecorder()
 	req, _ := http.NewRequest("GET", "/v1/jobs/echo/job_6740b44e-13b9-475d-af06-979627e0e0d6", nil)
-	j := server.JobStatusGetter{}
-	j.ServeHTTP(w, req)
+	req.SetBasicAuth("foo", "bar")
+	server.Get(u).ServeHTTP(w, req)
 	test.AssertEquals(t, w.Code, http.StatusOK)
 	var aj models.ArchivedJob
 	err := json.NewDecoder(w.Body).Decode(&aj)

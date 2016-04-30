@@ -11,7 +11,7 @@ import (
 	"github.com/Shyp/rickover/test"
 )
 
-var jsserver = JobStatusUpdater{}
+var jsserver = jobStatusUpdater{}
 
 func Test400EmptyStatusBody(t *testing.T) {
 	t.Parallel()
