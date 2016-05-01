@@ -17,28 +17,6 @@ import (
 	"github.com/Shyp/rickover/test/factory"
 )
 
-func TestWorkerShutsDown(t *testing.T) {
-	db.SetUp(t)
-	pool := NewPool("echo")
-	for i := 0; i < 3; i++ {
-		pool.AddDequeuer(factory.Processor("http://example.com"))
-	}
-	c1 := make(chan bool, 1)
-	go func() {
-		err := pool.Shutdown()
-		test.AssertNotError(t, err, "")
-		c1 <- true
-	}()
-	for {
-		select {
-		case <-c1:
-			return
-		case <-time.After(300 * time.Millisecond):
-			t.Fatalf("pool did not shut down in 300ms")
-		}
-	}
-}
-
 var successServer = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	w.WriteHeader(http.StatusAccepted)

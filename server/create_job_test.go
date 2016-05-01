@@ -12,7 +12,6 @@ import (
 	"github.com/Shyp/rickover/models"
 	"github.com/Shyp/rickover/rest"
 	"github.com/Shyp/rickover/test"
-	"github.com/Shyp/rickover/test/db"
 )
 
 var u = &UnsafeBypassAuthorizer{}
@@ -181,13 +180,6 @@ var validRequest = CreateJobRequest{
 	Concurrency:      3,
 }
 
-var validAtMostOnceRequest = CreateJobRequest{
-	Name:             "email-signup",
-	DeliveryStrategy: models.StrategyAtMostOnce,
-	Attempts:         1,
-	Concurrency:      3,
-}
-
 func Test401AuthorizerFailure(t *testing.T) {
 	t.Parallel()
 	w := httptest.NewRecorder()
@@ -223,18 +215,4 @@ func Test401SetsToken(t *testing.T) {
 	Get(f).ServeHTTP(w, req)
 	test.AssertEquals(t, f.UserId, "usr_123")
 	test.AssertEquals(t, f.Token, "tok_123")
-}
-
-func TestAtMostOnceSuccess(t *testing.T) {
-	db.SetUp(t)
-	defer db.TearDown(t)
-	w := httptest.NewRecorder()
-	b := new(bytes.Buffer)
-	json.NewEncoder(b).Encode(validAtMostOnceRequest)
-	req, err := http.NewRequest("POST", "/v1/jobs", b)
-	test.AssertNotError(t, err, "")
-	req.SetBasicAuth("usr_123", "tok_123")
-	s := new(UnsafeBypassAuthorizer)
-	Get(s).ServeHTTP(w, req)
-	test.AssertEquals(t, w.Code, http.StatusCreated)
 }

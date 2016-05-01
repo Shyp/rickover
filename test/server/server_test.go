@@ -246,7 +246,7 @@ func Test404JobNotFound(t *testing.T) {
 	w := httptest.NewRecorder()
 	req, _ := http.NewRequest("GET", "/v1/jobs/unknown", nil)
 	req.SetBasicAuth("usr_123", "tok_123")
-	server.Get(&server.UnsafeBypassAuthorizer{}).ServeHTTP(w, req)
+	server.Get(u).ServeHTTP(w, req)
 	test.AssertEquals(t, w.Code, http.StatusNotFound)
 }
 
@@ -265,6 +265,26 @@ func Test200JobFound(t *testing.T) {
 	w := httptest.NewRecorder()
 	req, _ := http.NewRequest("GET", "/v1/jobs/echo", nil)
 	req.SetBasicAuth("usr_123", "tok_123")
-	server.Get(&server.UnsafeBypassAuthorizer{}).ServeHTTP(w, req)
+	server.Get(u).ServeHTTP(w, req)
 	test.AssertEquals(t, w.Code, http.StatusOK)
+}
+
+var validAtMostOnceRequest = server.CreateJobRequest{
+	Name:             "email-signup",
+	DeliveryStrategy: models.StrategyAtMostOnce,
+	Attempts:         1,
+	Concurrency:      3,
+}
+
+func TestCreateJobAtMostOnceSuccess(t *testing.T) {
+	db.SetUp(t)
+	defer db.TearDown(t)
+	w := httptest.NewRecorder()
+	b := new(bytes.Buffer)
+	json.NewEncoder(b).Encode(validAtMostOnceRequest)
+	req, err := http.NewRequest("POST", "/v1/jobs", b)
+	test.AssertNotError(t, err, "")
+	req.SetBasicAuth("usr_123", "tok_123")
+	server.Get(u).ServeHTTP(w, req)
+	test.AssertEquals(t, w.Code, http.StatusCreated)
 }
