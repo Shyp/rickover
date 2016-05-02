@@ -9,6 +9,7 @@ import (
 	"github.com/Shyp/rickover/Godeps/_workspace/src/github.com/nu7hatch/gouuid"
 )
 
+// A PrefixUUID stores an additional prefix as part of a UUID type.
 type PrefixUUID struct {
 	Prefix string
 	UUID   *uuid.UUID

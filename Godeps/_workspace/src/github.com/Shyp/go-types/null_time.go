@@ -6,11 +6,14 @@ import (
 	"time"
 )
 
-// NullTime implementation taken from
-// https://github.com/lib/pq/blob/master/encode.go#L518-L538
+// Implementation taken from
+// https://github.com/lib/pq/blob/master/encode.go#L518-L538.
 //
-// It would be great to just import it from there but you get duplicate driver
+// It would be great to just import it from there, but you get duplicate driver
 // exceptions
+
+// A NullTime is a Time that may be null. It can be encoded or decoded from
+// JSON or the database.
 type NullTime struct {
 	Valid bool
 	Time  time.Time
