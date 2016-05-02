@@ -11,7 +11,6 @@ import (
 
 	"github.com/Shyp/rickover/Godeps/_workspace/src/github.com/Shyp/go-types"
 	"github.com/Shyp/rickover/Godeps/_workspace/src/github.com/nu7hatch/gouuid"
-	"github.com/Shyp/rickover/downstream"
 	"github.com/Shyp/rickover/models"
 	"github.com/Shyp/rickover/models/archived_jobs"
 	"github.com/Shyp/rickover/models/jobs"
@@ -34,15 +33,13 @@ func TestExpiredJobNotEnqueued(t *testing.T) {
 		c1 <- true
 	}))
 	defer s.Close()
-	jp := services.JobProcessor{
-		Client: downstream.NewClient("jobs", "password", s.URL),
-	}
+	jp := services.NewJobProcessor("password", s.URL)
 
 	_, err := jobs.Create(factory.SampleJob)
 	test.AssertNotError(t, err, "")
 	expiresAt := types.NullTime{
 		Valid: true,
-		Time:  time.Now().Add(-5 * time.Millisecond),
+		Time:  time.Now().UTC().Add(-5 * time.Millisecond),
 	}
 	qj, err := queued_jobs.Enqueue(factory.JobId, "echo", time.Now().UTC(), expiresAt, factory.EmptyData)
 	test.AssertNotError(t, err, "")
@@ -122,9 +119,7 @@ func TestWorkerRetriesJSON503(t *testing.T) {
 func TestWorkerWaitsConnectTimeout(t *testing.T) {
 	db.SetUp(t)
 	defer db.TearDown(t)
-	jp := services.JobProcessor{
-		Client: downstream.NewClient("jobs", "password", "http://10.255.255.1"),
-	}
+	jp := services.NewJobProcessor("http://10.255.255.1", "password")
 
 	// Okay this is not the world's best design.
 	// Job processor client -> worker client -> generic rest client
@@ -154,9 +149,7 @@ func TestWorkerWaitsRequestTimeout(t *testing.T) {
 	}))
 	defer s.Close()
 
-	jp := services.JobProcessor{
-		Client: downstream.NewClient("jobs", "password", s.URL),
-	}
+	jp := services.NewJobProcessor(s.URL, "password")
 
 	// Okay this is not the world's best design.
 	// Job processor client -> worker client -> generic rest client
@@ -168,9 +161,9 @@ func TestWorkerWaitsRequestTimeout(t *testing.T) {
 		test.AssertNotError(t, err, "")
 	}()
 
-	err := jp.DoWork(qj)
+	workErr := jp.DoWork(qj)
+	test.AssertNotError(t, workErr, "")
 	wg.Wait()
-	test.AssertNotError(t, err, "")
 	aj, err := archived_jobs.Get(qj.Id)
 	test.AssertNotError(t, err, "")
 	test.AssertEquals(t, aj.Status, models.StatusSucceeded)
@@ -179,10 +172,11 @@ func TestWorkerWaitsRequestTimeout(t *testing.T) {
 func TestWorkerDoesNotWaitConnectionFailure(t *testing.T) {
 	db.SetUp(t)
 	defer db.TearDown(t)
-	jp := services.JobProcessor{
+	jp := services.NewJobProcessor(
+		"password",
 		// TODO empty port finder
-		Client: downstream.NewClient("jobs", "password", "http://127.0.0.1:29656"),
-	}
+		"http://127.0.0.1:29656",
+	)
 
 	// Okay this is not the world's best design.
 	// Job processor client -> worker client -> generic rest client

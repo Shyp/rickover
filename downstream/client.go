@@ -28,8 +28,6 @@ func init() {
 	Logger = log.New(os.Stderr, "", log.LstdFlags)
 }
 
-var httpClient = &http.Client{Timeout: defaultHTTPTimeout}
-
 // The DownstreamClient is an API client for a downstream service that can
 // handle POST requests to /v1/jobs/:job-name/:job-id. The service is expected
 // to return a 202 and then make a callback to the job scheduler when the job
@@ -45,7 +43,7 @@ func NewClient(id, token, base string) *Client {
 	c := &Client{&rest.Client{
 		Id:     id,
 		Token:  token,
-		Client: httpClient,
+		Client: &http.Client{Timeout: defaultHTTPTimeout},
 		Base:   base,
 	}, nil}
 	c.Job = &JobService{Client: c}

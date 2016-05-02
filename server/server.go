@@ -1,4 +1,4 @@
-// API interface for enqueueing/updating jobs
+// Package server provides an HTTP interface for the job queue/scheduler.
 package server
 
 import (

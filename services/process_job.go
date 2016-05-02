@@ -23,11 +23,28 @@ var DefaultTimeout = 5 * time.Minute
 
 // JobProcessor implements the Worker interface.
 type JobProcessor struct {
+	// A Client for making requests to the downstream server.
 	Client *downstream.Client
 
-	// Amount of time we should wait for a response before marking the job as
-	// failed.
+	// Amount of time we should wait for the downstream server to hit the
+	// callback before marking the job as failed.
 	Timeout time.Duration
+}
+
+// NewJobProcessor creates a services.JobProcessor that makes requests to the
+// downstream url.
+//
+// By default the Client uses Basic Auth with "jobs" as the username, and the
+// configured password as the password.
+//
+// If the downstream server does not hit the callback, jobs sent to the
+// downstream server are timed out and marked as failed after DefaultTimeout
+// has elapsed.
+func NewJobProcessor(downstreamUrl string, downstreamPassword string) *JobProcessor {
+	return &JobProcessor{
+		Client:  downstream.NewClient("jobs", downstreamPassword, downstreamUrl),
+		Timeout: DefaultTimeout,
+	}
 }
 
 // isTimeout returns true if the err was caused by a request timeout.

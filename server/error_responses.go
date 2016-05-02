@@ -1,4 +1,5 @@
 // Helpers for building various types of error responses.
+
 package server
 
 import (

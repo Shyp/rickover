@@ -1,5 +1,3 @@
-// A simple http.Handler that can match wildcard routes, and call the
-// appropriate handler.
 package server
 
 import (
