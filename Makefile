@@ -22,12 +22,10 @@ docs:
 	godoc -http=:6060
 
 test: 
-	@DATABASE_URL=$(TEST_DATABASE_URL) go test ./config/... ./dequeuer/... ./downstream/... ./models/... ./rest/... ./server/... ./services/... ./setup/... -timeout 2s
-	@DATABASE_URL=$(TEST_DATABASE_URL) DEPLOYMENT_NAME=test go test -p 1 ./test/... -timeout 2s
+	@DATABASE_URL=$(TEST_DATABASE_URL) go test ./... -timeout 2s
 
 race-test:
-	@DATABASE_URL=$(TEST_DATABASE_URL) go test -race -v ./config/... ./dequeuer/... ./downstream/... ./models/... ./rest/... ./server/... ./services/... ./setup/... -timeout 2s
-	@DATABASE_URL=$(TEST_DATABASE_URL) DEPLOYMENT_NAME=test go test -race -p 1 -v ./test/... -timeout 2s
+	@DATABASE_URL=$(TEST_DATABASE_URL) go test -race -v ./... -timeout 2s
 
 serve:
 	@DATABASE_URL=$(DATABASE_URL) go run commands/server/main.go
