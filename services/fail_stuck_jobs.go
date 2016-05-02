@@ -40,9 +40,11 @@ func ArchiveStuckJobs(olderThan time.Duration) error {
 // them as failed.
 func WatchStuckJobs(interval time.Duration, olderThan time.Duration) {
 	for _ = range time.Tick(interval) {
-		err := ArchiveStuckJobs(olderThan)
-		if err != nil {
-			log.Printf("Error archiving stuck jobs: %s\n", err.Error())
-		}
+		go func() {
+			err := ArchiveStuckJobs(olderThan)
+			if err != nil {
+				log.Printf("Error archiving stuck jobs: %s\n", err.Error())
+			}
+		}()
 	}
 }
