@@ -19,24 +19,31 @@ import (
 	"github.com/gorilla/handlers"
 )
 
-func Example_server() {
-	dbConns, err := config.GetInt("PG_SERVER_POOL_SIZE")
+var serverDbConns int
+
+func init() {
+	var err error
+	serverDbConns, err = config.GetInt("PG_SERVER_POOL_SIZE")
 	if err != nil {
 		log.Printf("Error getting database pool size: %s. Defaulting to 10", err)
-		dbConns = 10
-	}
-
-	if err = setup.DB(db.DefaultConnection, dbConns); err != nil {
-		log.Fatal(err)
+		serverDbConns = 10
 	}
 
 	metrics.Namespace = "rickover.server"
+
+	// Change this user to a private value
+	server.AddUser("test", "hymanrickover")
+}
+
+func Example_server() {
+	if err := setup.DB(db.DefaultConnection, serverDbConns); err != nil {
+		log.Fatal(err)
+	}
+
 	metrics.Start("web")
 
 	go setup.MeasureActiveQueries(5 * time.Second)
 
-	// Change this user to a private value
-	server.AddUser("test", "hymanrickover")
 	s := server.Get(server.DefaultAuthorizer)
 
 	log.Println("Listening on port 9090\n")

@@ -28,21 +28,29 @@ import (
 	"github.com/Shyp/rickover/setup"
 )
 
-func checkError(err error) {
-	if err != nil {
-		log.Fatal(err)
-	}
-}
+var dbConns int
+var downstreamUrl string
+var downstreamPassword string
 
-func Example_dequeuer() {
-	dbConns, err := config.GetInt("PG_WORKER_POOL_SIZE")
+func init() {
+	var err error
+	dbConns, err = config.GetInt("PG_WORKER_POOL_SIZE")
 	if err != nil {
 		log.Printf("Error getting database pool size: %s. Defaulting to 20", err)
 		dbConns = 20
 	}
 
-	err = setup.DB(db.DefaultConnection, dbConns)
-	checkError(err)
+	downstreamPassword = os.Getenv("DOWNSTREAM_WORKER_AUTH")
+
+	metrics.Namespace = "rickover.dequeuer"
+}
+
+func Example_dequeuer() {
+	if err := setup.DB(db.DefaultConnection, dbConns); err != nil {
+		log.Fatal(err)
+	}
+
+	metrics.Start("worker")
 
 	go setup.MeasureActiveQueries(1 * time.Second)
 	go setup.MeasureQueueDepth(5 * time.Second)
@@ -52,17 +60,15 @@ func Example_dequeuer() {
 	// 7 minutes, and mark them as failed.
 	go services.WatchStuckJobs(1*time.Minute, 7*time.Minute)
 
-	metrics.Namespace = "rickover.dequeuer"
-	metrics.Start("worker")
-
-	downstreamUrl := config.GetURLOrBail("DOWNSTREAM_URL")
-	downstreamPassword := os.Getenv("DOWNSTREAM_WORKER_AUTH")
-	jp := services.NewJobProcessor(downstreamUrl.String(), downstreamPassword)
+	downstreamUrl = config.GetURLOrBail("DOWNSTREAM_URL").String()
+	jp := services.NewJobProcessor(downstreamUrl, downstreamPassword)
 
 	// CreatePools will read all job types out of the jobs table, then start
 	// all dequeuers for those jobs.
 	pools, err := dequeuer.CreatePools(jp)
-	checkError(err)
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	sigterm := make(chan os.Signal, 1)
 	signal.Notify(sigterm, syscall.SIGTERM)
