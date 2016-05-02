@@ -1,8 +1,13 @@
-// Run the rickover dequeuer.
+// Run the rickover dequeuer. Configure the following environment variables:
 //
-// All of the project defaults are used. There is one authenticated user for
-// basic auth, the user is "test" and the password is "hymanrickover". You will
-// want to copy this binary and add your own authentication scheme.
+// DATABASE_URL: Postgres connection string (see Makefile)
+// PG_WORKER_POOL_SIZE: Maximum number of database connections from this process
+// DOWNSTREAM_URL: Downstream server that can perform the work
+// DOWNSTREAM_WORKER_AUTH: Basic Auth password for downstream server (user "jobs")
+//
+// Create job types by making a POST request to /v1/jobs with the job name and
+// concurrency. After that, CreatePools will start and run dequeuers for those
+// types.
 
 package rickover
 
