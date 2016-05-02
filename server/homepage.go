@@ -8,19 +8,30 @@ import (
 	"github.com/Shyp/rickover/config"
 )
 
-var data = homepageData{
-	Version: config.Version,
-	URL:     os.Getenv("HOMEPAGE_IFRAME_URL"),
+var data homepageData
+
+func init() {
+	data = homepageData{
+		Version: config.Version,
+		URL:     os.Getenv("HOMEPAGE_IFRAME_URL"),
+	}
+	title := os.Getenv("HOMEPAGE_TITLE")
+	if title == "" {
+		title = "Rickover Dashboard"
+	}
+	data.Title = title
 }
 
 type homepageData struct {
 	Version string
 	URL     string
+	Title   string
 }
 
 var homepagetemplate = `<!doctype html>
 <html>
 <head>
+	<title>{{ .Title }}</title>
 	<style>
 	html, body, #dashboard {
 		height: 100%;
