@@ -115,6 +115,10 @@ func forbidNonTLSTrafficHandler(h http.Handler) http.Handler {
 				return
 			}
 		}
+		// This header doesn't mean anything when served over HTTP, but
+		// detecting HTTPS is a general way is hard, so let's just send it
+		// every time.
+		w.Header().Set("Strict-Transport-Security", "max-age=31536000; includeSubDomains; preload")
 		h.ServeHTTP(w, r)
 	})
 }
