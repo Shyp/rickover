@@ -8,14 +8,16 @@ import (
 	"github.com/Shyp/rickover/models/queued_jobs"
 )
 
-func ArchiveStuckJobs(oldDefinition time.Duration) error {
-	var olderThan time.Time
-	if oldDefinition >= 0 {
-		olderThan = time.Now().Add(-1 * oldDefinition)
+// ArchiveStuckJobs marks as failed any queued jobs with an updated_at
+// timestamp older than the olderThan value.
+func ArchiveStuckJobs(olderThan time.Duration) error {
+	var olderThanTime time.Time
+	if olderThan >= 0 {
+		olderThanTime = time.Now().Add(-1 * olderThan)
 	} else {
-		olderThan = time.Now().Add(oldDefinition)
+		olderThanTime = time.Now().Add(olderThan)
 	}
-	jobs, err := queued_jobs.GetOldInProgressJobs(olderThan)
+	jobs, err := queued_jobs.GetOldInProgressJobs(olderThanTime)
 	if err != nil {
 		return err
 	}
@@ -36,9 +38,9 @@ func ArchiveStuckJobs(oldDefinition time.Duration) error {
 // WatchStuckJobs polls the queued_jobs table for stuck jobs (defined as
 // in-progress jobs that haven't been updated in oldDuration time), and marks
 // them as failed.
-func WatchStuckJobs(interval time.Duration, oldDefinition time.Duration) {
+func WatchStuckJobs(interval time.Duration, olderThan time.Duration) {
 	for _ = range time.Tick(interval) {
-		err := ArchiveStuckJobs(oldDefinition)
+		err := ArchiveStuckJobs(olderThan)
 		if err != nil {
 			log.Printf("Error archiving stuck jobs: %s\n", err.Error())
 		}

@@ -213,6 +213,12 @@ Content-Type: application/json
 If this request times out or errors, you can try it again; the `attempt` number
 is used to avoid making a stale update.
 
+You can also report status of a job by calling
+[services.HandleStatusCallback][status-callback] directly, with success or
+failure.
+
+[status-callback]: https://godoc.org/github.com/Shyp/rickover/services#HandleStatusCallback
+
 ## Failure Handling
 
 If the downstream worker never hits the callback, the JobProcessor will time

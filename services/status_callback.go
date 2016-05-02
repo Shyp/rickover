@@ -19,10 +19,10 @@ import (
 	"github.com/Shyp/rickover/models/queued_jobs"
 )
 
-// HandleStatusCallback updates the job based on the status and the attempts
-// remaining. Likely the job will either be inserted into archived_jobs and
-// removed from queued_jobs, or the job will have its attempts counter
-// decremented in queued_jobs.
+// HandleStatusCallback updates a queued job with the provided status and
+// the attempts remaining. Likely the job will either be inserted into
+// archived_jobs and removed from queued_jobs, or the job will have its
+// attempts counter decremented in queued_jobs.
 //
 // This can return an error if any of the following happens: the archived_job
 // already exists, the queued job no longer exists by the time you attempt to
