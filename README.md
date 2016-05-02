@@ -152,22 +152,18 @@ type Worker interface {
 
 A default Worker is provided as [services.JobProcessor][job-processor],
 which makes an API request to a downstream service. The default client is
-[downstream.Client][downstream-client]. You'll need to set the URL, username
+[downstream.Client][downstream-client]. You'll need to set the URL
 and password for the downstream service:
 
 ```go
 import "github.com/Shyp/rickover/dequeuer"
-import "github.com/Shyp/rickover/downstream"
 import "github.com/Shyp/rickover/services"
 
 func main() {
-	jp := &services.JobProcessor{
-		Client:  downstream.NewClient("jobs", "hymanrickover",
-            "http://downstream-service.example.com"),
-		Timeout: 5 * time.Minute,
-	}
+	password := "hymanrickover"
+	// Basic auth - username "jobs", password password
+	jp := services.NewJobProcessor("http://downstream-service.example.com", password)
 
-	// This creates a pool of dequeuers and starts them.
 	pools, err := dequeuer.CreatePools(jp)
 	fmt.Println(err)
 }

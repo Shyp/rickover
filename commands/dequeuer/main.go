@@ -13,7 +13,6 @@ import (
 	"github.com/Shyp/rickover/Godeps/_workspace/src/github.com/Shyp/go-simple-metrics"
 	"github.com/Shyp/rickover/config"
 	"github.com/Shyp/rickover/dequeuer"
-	"github.com/Shyp/rickover/downstream"
 	"github.com/Shyp/rickover/models/db"
 	"github.com/Shyp/rickover/services"
 	"github.com/Shyp/rickover/setup"
@@ -60,10 +59,7 @@ func main() {
 	}
 
 	parsedUrl := config.GetURLOrBail("DOWNSTREAM_URL")
-	jp := &services.JobProcessor{
-		Client:  downstream.NewClient("jobs", downstreamPassword, parsedUrl.String()),
-		Timeout: 5 * time.Minute,
-	}
+	jp := services.NewJobProcessor(parsedUrl.String(), downstreamPassword)
 
 	// This creates a pool of dequeuers and starts them.
 	pools, err := dequeuer.CreatePools(jp)
