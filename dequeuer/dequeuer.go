@@ -65,6 +65,8 @@ func CreatePools(w Worker) (Pools, error) {
 	return pools, nil
 }
 
+// A Pool contains an array of dequeuers, all of which perform work for the
+// same models.Job.
 type Pool struct {
 	Dequeuers              []*Dequeuer
 	Name                   string
@@ -115,7 +117,7 @@ func (p *Pool) AddDequeuer(w Worker) error {
 	}
 	p.Dequeuers = append(p.Dequeuers, d)
 	p.wg.Add(1)
-	d.Work(p.Name, &p.wg)
+	go d.Work(p.Name, &p.wg)
 	return nil
 }
 
@@ -159,50 +161,48 @@ func jitter(val float64) float64 {
 }
 
 func (d *Dequeuer) Work(name string, wg *sync.WaitGroup) {
-	go func() {
-		defer wg.Done()
-		failedAcquireCount := 0
-		waitDuration := time.Duration(jitter(float64(500 * time.Millisecond)))
-		for {
-			select {
-			case <-d.QuitChan:
-				log.Printf("%s worker %d quitting\n", name, d.Id)
-				return
+	defer wg.Done()
+	failedAcquireCount := 0
+	waitDuration := time.Duration(jitter(float64(500 * time.Millisecond)))
+	for {
+		select {
+		case <-d.QuitChan:
+			log.Printf("%s worker %d quitting\n", name, d.Id)
+			return
 
-			case <-time.After(waitDuration):
-				start := time.Now()
-				qj, err := queued_jobs.Acquire(name)
-				go metrics.Time("acquire.latency", time.Since(start))
-				if err == nil {
+		case <-time.After(waitDuration):
+			start := time.Now()
+			qj, err := queued_jobs.Acquire(name)
+			go metrics.Time("acquire.latency", time.Since(start))
+			if err == nil {
+				failedAcquireCount = 0
+				waitDuration = time.Duration(0)
+				err = d.W.DoWork(qj)
+				if err != nil {
+					log.Printf("worker: Error processing job %s: %s", qj.Id.String(), err)
+					go metrics.Increment(fmt.Sprintf("dequeue.%s.error", name))
+				} else {
+					go metrics.Increment(fmt.Sprintf("dequeue.%s.success", name))
+				}
+			} else {
+				dberr, ok := err.(*dberror.Error)
+				if ok && dberr.Code == dberror.CodeLockNotAvailable {
+					// SELECT 1 returned a record but another thread
+					// got it. Don't sleep at all.
+					go metrics.Increment(fmt.Sprintf("dequeue.%s.nowait", name))
 					failedAcquireCount = 0
 					waitDuration = time.Duration(0)
-					err = d.W.DoWork(qj)
-					if err != nil {
-						log.Printf("worker: Error processing job %s: %s", qj.Id.String(), err)
-						go metrics.Increment(fmt.Sprintf("dequeue.%s.error", name))
-					} else {
-						go metrics.Increment(fmt.Sprintf("dequeue.%s.success", name))
-					}
-				} else {
-					dberr, ok := err.(*dberror.Error)
-					if ok && dberr.Code == dberror.CodeLockNotAvailable {
-						// SELECT 1 returned a record but another thread
-						// got it. Don't sleep at all.
-						go metrics.Increment(fmt.Sprintf("dequeue.%s.nowait", name))
-						failedAcquireCount = 0
-						waitDuration = time.Duration(0)
-						continue
-					}
-
-					failedAcquireCount++
-					multiplier := math.Pow(d.sleepFactor, float64(failedAcquireCount))
-					if multiplier > maxMultiplier {
-						multiplier = maxMultiplier
-					}
-					multiplier = jitter(multiplier)
-					waitDuration = 10 * time.Duration(multiplier) * time.Millisecond
+					continue
 				}
+
+				failedAcquireCount++
+				multiplier := math.Pow(d.sleepFactor, float64(failedAcquireCount))
+				if multiplier > maxMultiplier {
+					multiplier = maxMultiplier
+				}
+				multiplier = jitter(multiplier)
+				waitDuration = 10 * time.Duration(multiplier) * time.Millisecond
 			}
 		}
-	}()
+	}
 }
