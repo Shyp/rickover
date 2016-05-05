@@ -530,3 +530,12 @@ a rolling basis. I doubt this will help much, but it might.
 - Get a bigger Postgres database.
 
 - Upgrade to Postgres 9.5 and update the Acquire() strategy to use SKIP LOCKED.
+
+## Roadmap
+
+- Allow UPDATEs to jobs once they've been created
+
+- API for retrieving recent jobs/paging through archived jobs, by name
+
+- Dequeuer listens on a local socket/port, so you can send commands to it to
+  add/remove dequeuers on the fly.
