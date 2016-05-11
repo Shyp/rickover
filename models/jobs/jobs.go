@@ -95,7 +95,7 @@ func GetAll() ([]*models.Job, error) {
 func GetRetry(name string, attempts uint8) (job *models.Job, err error) {
 	for i := uint8(0); i < attempts; i++ {
 		job, err = Get(name)
-		if err == nil {
+		if err == nil || err == sql.ErrNoRows {
 			break
 		}
 		time.Sleep(50 * time.Millisecond)

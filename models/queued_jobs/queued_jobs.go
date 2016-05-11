@@ -19,6 +19,20 @@ const Prefix = "job_"
 // ErrNotFound indicates that the job was not found.
 var ErrNotFound = errors.New("Queued job not found")
 
+// UnknownOrArchivedError is raised when the job type is unknown or the job has
+// already been archived. It's unfortunate we can't distinguish these, but more
+// important to minimize the total number of queries to the database.
+type UnknownOrArchivedError struct {
+	Err string
+}
+
+func (e *UnknownOrArchivedError) Error() string {
+	if e == nil {
+		return "<nil>"
+	}
+	return e.Err
+}
+
 var enqueueStmt *sql.Stmt
 var getStmt *sql.Stmt
 var deleteStmt *sql.Stmt
@@ -46,6 +60,9 @@ INSERT INTO queued_jobs (%s)
 SELECT $1, name, attempts, $3, $4, '%s', $5
 FROM jobs 
 WHERE name=$2
+AND NOT EXISTS (
+	SELECT id FROM archived_jobs WHERE id=$1
+)
 RETURNING %s`, insertFields(), models.StatusQueued, fields())
 	enqueueStmt, err = db.Conn.Prepare(query)
 	if err != nil {
@@ -145,8 +162,13 @@ func Enqueue(id types.PrefixUUID, name string, runAfter time.Time, expiresAt typ
 	var bt []byte
 	err := enqueueStmt.QueryRow(id, name, runAfter, expiresAt, []byte(data)).Scan(args(qj, &bt)...)
 	if err != nil {
-		err = dberror.GetError(err)
-		return nil, err
+		if err == sql.ErrNoRows {
+			e := &UnknownOrArchivedError{
+				Err: fmt.Sprintf("Job type %s does not exist or the job with that id has already been archived", name),
+			}
+			return nil, e
+		}
+		return nil, dberror.GetError(err)
 	}
 	qj.Id.Prefix = Prefix
 	qj.Data = json.RawMessage(bt)
@@ -166,8 +188,7 @@ func Get(id types.PrefixUUID) (*models.QueuedJob, error) {
 		if err == sql.ErrNoRows {
 			return nil, ErrNotFound
 		}
-		err = dberror.GetError(err)
-		return nil, err
+		return nil, dberror.GetError(err)
 	}
 	qj.Id.Prefix = Prefix
 	qj.Data = json.RawMessage(bt)

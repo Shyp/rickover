@@ -13,6 +13,7 @@ import (
 	"github.com/Shyp/rickover/models"
 	"github.com/Shyp/rickover/models/jobs"
 	"github.com/Shyp/rickover/models/queued_jobs"
+	"github.com/Shyp/rickover/services"
 	"github.com/Shyp/rickover/test"
 	"github.com/Shyp/rickover/test/db"
 	"github.com/Shyp/rickover/test/factory"
@@ -89,7 +90,7 @@ func TestEnqueueJobExists(t *testing.T) {
 	}
 }
 
-func TestEnqueueNoJobErrNoRows(t *testing.T) {
+func TestEnqueueUnknownJobTypeErrNoRows(t *testing.T) {
 	t.Parallel()
 	db.SetUp(t)
 
@@ -97,7 +98,19 @@ func TestEnqueueNoJobErrNoRows(t *testing.T) {
 	runAfter := time.Now().UTC()
 	_, err := queued_jobs.Enqueue(factory.JobId, "unknownJob", runAfter, expiresAt, empty)
 	test.AssertError(t, err, "")
-	test.AssertEquals(t, err, sql.ErrNoRows)
+	test.AssertEquals(t, err.Error(), "Job type unknownJob does not exist or the job with that id has already been archived")
+}
+
+func TestEnqueueWithExistingArchivedJobFails(t *testing.T) {
+	qj := factory.CreateQueuedJob(t, factory.EmptyData)
+	defer db.TearDown(t)
+	err := services.HandleStatusCallback(qj.Id, qj.Name, models.StatusSucceeded, qj.Attempts)
+	test.AssertNotError(t, err, "")
+	expiresAt := types.NullTime{Valid: false}
+	runAfter := time.Now().UTC()
+	_, err = queued_jobs.Enqueue(qj.Id, "echo", runAfter, expiresAt, empty)
+	test.AssertError(t, err, "")
+	test.AssertEquals(t, err.Error(), "Job type echo does not exist or the job with that id has already been archived")
 }
 
 func TestNonexistentReturnsErrNoRows(t *testing.T) {

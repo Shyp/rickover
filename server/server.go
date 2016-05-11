@@ -524,17 +524,28 @@ func (j *jobEnqueuer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	name := jobIdRoute.FindStringSubmatch(r.URL.Path)[1]
 	queuedJob, err := queued_jobs.Enqueue(id, name, ejr.RunAfter.Time, ejr.ExpiresAt, ejr.Data)
 	if err != nil {
-		if err == sql.ErrNoRows {
-			nfe := &rest.Error{
-				Title:    fmt.Sprintf("Job type %s not found", name),
-				Id:       "job_type_not_found",
-				Instance: fmt.Sprintf("/v1/jobs/%s", name),
-			}
-			notFound(w, nfe)
-			metrics.Increment(fmt.Sprintf("enqueue.%s.not_found", name))
-			return
-		}
 		switch terr := err.(type) {
+		case *queued_jobs.UnknownOrArchivedError:
+			_, err = jobs.GetRetry(name, 3)
+			if err != nil && err == sql.ErrNoRows {
+				nfe := &rest.Error{
+					Title:    fmt.Sprintf("Job type %s not found", name),
+					Id:       "job_type_not_found",
+					Instance: fmt.Sprintf("/v1/jobs/%s", name),
+				}
+				notFound(w, nfe)
+				metrics.Increment(fmt.Sprintf("enqueue.%s.not_found", name))
+				return
+			} else {
+				alreadyArchived := &rest.Error{
+					Title:    fmt.Sprintf("Job has already been archived", name),
+					Id:       "job_already_archived",
+					Instance: fmt.Sprintf("/v1/jobs/%s/%s", name, id.String()),
+				}
+				badRequest(w, r, alreadyArchived)
+				metrics.Increment("enqueue.error.already_archived")
+				return
+			}
 		case *dberror.Error:
 			if terr.Code == dberror.CodeUniqueViolation {
 				queuedJob, err = queued_jobs.Get(id)
