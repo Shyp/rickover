@@ -18,8 +18,8 @@
 		},
 		{
 			"ImportPath": "github.com/Shyp/go-simple-metrics",
-			"Comment": "0.1-1-g2cca763",
-			"Rev": "2cca76312ad78fe8f77c411ee2312fc6fb771ce2"
+			"Comment": "0.3",
+			"Rev": "416f9b3f4ee36e7cd9d48f2b50aebbc3949e914f"
 		},
 		{
 			"ImportPath": "github.com/Shyp/go-types",

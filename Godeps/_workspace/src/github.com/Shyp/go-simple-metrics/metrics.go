@@ -14,6 +14,8 @@ import (
 	metrics "github.com/Shyp/rickover/Godeps/_workspace/src/github.com/rcrowley/go-metrics"
 )
 
+const Version = "0.3"
+
 var debug = godebug.Debug("metrics")
 
 // Namespace is the namespace under which all metrics will get incremented.
@@ -38,11 +40,11 @@ func Start(source string) {
 	} else {
 		go librato.Librato(
 			metrics.DefaultRegistry,
-			10*time.Second,
+			15*time.Second,
 			"devops@shyp.com",
 			token,
 			source,
-			[]float64{0.5, 0.95, 0.99, 1},
+			[]float64{0.5, 0.99, 1},
 			time.Millisecond,
 		)
 	}
@@ -51,8 +53,8 @@ func Start(source string) {
 // Increment a counter with the given name.
 func Increment(name string) {
 	mn := getWithNamespace(name)
-	m := metrics.GetOrRegisterMeter(mn, nil)
-	m.Mark(1)
+	c := metrics.GetOrRegisterCounter(mn, nil)
+	c.Inc(1)
 	debug("increment %s 1", name)
 }
 
