@@ -1,7 +1,7 @@
 {
 	"ImportPath": "github.com/Shyp/rickover",
 	"GoVersion": "go1.5",
-	"GodepVersion": "v62",
+	"GodepVersion": "v66",
 	"Packages": [
 		"./..."
 	],
@@ -50,7 +50,7 @@
 		},
 		{
 			"ImportPath": "github.com/rcrowley/go-metrics",
-			"Rev": "a75cb56de1e3c4edbb0e63c4d701fe70337e4cc7"
+			"Rev": "eeba7bd0dd01ace6e690fa833b3f22aaec29af43"
 		}
 	]
 }
