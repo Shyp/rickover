@@ -5,7 +5,7 @@ go:
   - 1.6
   - tip
 
-script: make race-test
+script: make lint race-test
 
 before_script:
   - make test-install

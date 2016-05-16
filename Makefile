@@ -13,6 +13,9 @@ test-install:
 	-createdb rickover --owner=rickover
 	-createdb rickover_test --owner=rickover
 
+lint:
+	go vet ./...
+
 build:
 	go build ./...
 

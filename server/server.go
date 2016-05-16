@@ -538,7 +538,7 @@ func (j *jobEnqueuer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 				return
 			} else {
 				alreadyArchived := &rest.Error{
-					Title:    fmt.Sprintf("Job has already been archived", name),
+					Title:    "Job has already been archived",
 					Id:       "job_already_archived",
 					Instance: fmt.Sprintf("/v1/jobs/%s/%s", name, id.String()),
 				}

@@ -46,6 +46,6 @@ func Example_server() {
 
 	s := server.Get(server.DefaultAuthorizer)
 
-	log.Println("Listening on port 9090\n")
+	log.Println("Listening on port 9090")
 	log.Fatal(http.ListenAndServe(":9090", handlers.LoggingHandler(os.Stdout, s)))
 }
