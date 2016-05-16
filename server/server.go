@@ -162,10 +162,10 @@ func debugRequestBodyHandler(h http.Handler) http.Handler {
 
 			_, _ = b.WriteString(fmt.Sprintf("HTTP/1.1 %d\r\n", res.Code))
 			_ = res.HeaderMap.Write(b)
-			w.WriteHeader(res.Code)
 			for k, v := range res.HeaderMap {
 				w.Header()[k] = v
 			}
+			w.WriteHeader(res.Code)
 			_, _ = b.WriteString("\r\n")
 			writer := io.MultiWriter(w, b)
 			_, _ = res.Body.WriteTo(writer)
