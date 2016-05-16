@@ -53,7 +53,7 @@ func TestPostError(t *testing.T) {
 	test.AssertEquals(t, err.Error(), "bad request")
 }
 
-func ExampleClient(t *testing.T) {
+func ExampleClient() {
 	client := NewClient("jobs", "secretpassword", "http://ipinfo.io")
 	req, _ := client.NewRequest("GET", "/json", nil)
 	type resp struct {

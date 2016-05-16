@@ -84,15 +84,15 @@ func MeasureInProgressJobs(interval time.Duration) {
 func DB(connector db.Connector, dbConns int) error {
 	mu.Lock()
 	defer mu.Unlock()
-	if db.Conn == nil {
-		db.Conn = &sql.DB{}
-	} else {
+	if db.Conn != nil {
 		if err := db.Conn.Ping(); err == nil {
 			// Already connected.
 			return nil
 		}
 	}
-	if err := connector.Connect(db.Conn, dbConns); err != nil {
+	conn, err := connector.Connect(dbConns)
+	db.Conn = conn
+	if err != nil {
 		return errors.New("Could not establish a database connection: " + err.Error())
 	}
 	if err := db.Conn.Ping(); err != nil {
