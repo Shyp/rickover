@@ -2,6 +2,7 @@ package db
 
 import (
 	"fmt"
+	"os"
 	"testing"
 
 	"github.com/Shyp/rickover/models/db"
@@ -9,6 +10,9 @@ import (
 )
 
 func SetUp(t *testing.T) {
+	if os.Getenv("DATABASE_URL") == "" {
+		os.Setenv("DATABASE_URL", "postgres://rickover@localhost:5432/rickover_test?sslmode=disable&timezone=UTC")
+	}
 	if err := setup.DB(db.DefaultConnection, 10); err != nil {
 		t.Fatal(err)
 	}

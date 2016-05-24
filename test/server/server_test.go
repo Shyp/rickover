@@ -1,4 +1,4 @@
-package server
+package servertest
 
 import (
 	"bytes"
@@ -165,6 +165,16 @@ func TestReplayJobWithNoName(t *testing.T) {
 	err := json.NewDecoder(w.Body).Decode(&qj)
 	test.AssertNotError(t, err, "")
 	test.AssertNotEquals(t, qj.Id.String(), "job_6740b44e-13b9-475d-af06-979627e0e0d6")
+}
+
+func TestReplayQueuedJobFails(t *testing.T) {
+	defer db.TearDown(t)
+	qj := factory.CreateQueuedJob(t, factory.EmptyData)
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest("POST", fmt.Sprintf("/v1/jobs/echo/%s/replay", qj.Id.String()), nil)
+	req.SetBasicAuth("test", testPassword)
+	server.DefaultServer.ServeHTTP(w, req)
+	test.AssertEquals(t, w.Code, 400)
 }
 
 func Test202SuccessfulEnqueue(t *testing.T) {
