@@ -78,6 +78,9 @@ func replayHandler() http.Handler {
 			writeServerError(w, r, err)
 			return
 		}
+		// We don't know when the job expired, because we don't save that info
+		// in archived_jobs.
+		// https://github.com/Shyp/rickover/issues/2
 		queuedJob, err := queued_jobs.Enqueue(newId, jobName, time.Now(), types.NullTime{Valid: false}, data)
 		if err != nil {
 			writeServerError(w, r, err)
