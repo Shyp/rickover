@@ -22,14 +22,17 @@ var sampleJob = models.Job{
 
 // Test that creating an archived job returns the job
 func TestCreateJobReturnsJob(t *testing.T) {
-	qj := factory.CreateQueuedJob(t, factory.EmptyData)
+	t.Parallel()
+	qj := factory.CreateQJ(t)
 	defer db.TearDown(t)
-	aj, err := archived_jobs.Create(qj.Id, "echo", models.StatusSucceeded, 7)
+	aj, err := archived_jobs.Create(qj.Id, qj.Name, models.StatusSucceeded, qj.Attempts)
 	test.AssertNotError(t, err, "")
 	test.AssertEquals(t, aj.Id.String(), qj.Id.String())
 	test.AssertEquals(t, aj.Status, models.StatusSucceeded)
-	test.AssertEquals(t, aj.Attempts, uint8(7))
+	test.AssertEquals(t, aj.Attempts, uint8(qj.Attempts))
 	test.AssertEquals(t, string(aj.Data), "{}")
+	test.AssertEquals(t, aj.ExpiresAt.Valid, true)
+	test.AssertEquals(t, aj.ExpiresAt.Time, qj.ExpiresAt.Time)
 
 	diff := time.Since(aj.CreatedAt)
 	test.Assert(t, diff < 20*time.Millisecond, "")

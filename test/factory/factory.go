@@ -74,6 +74,27 @@ func CreateQueuedJob(t *testing.T, data json.RawMessage) *models.QueuedJob {
 	return createJobAndQueuedJob(t, SampleJob, data, false)
 }
 
+// CreateQJ creates a job with a random name, and a random UUID.
+func CreateQJ(t *testing.T) *models.QueuedJob {
+	db.SetUp(t)
+	jobname := RandomId("")
+	job, err := jobs.Create(models.Job{
+		Name:             jobname.String(),
+		Attempts:         11,
+		Concurrency:      3,
+		DeliveryStrategy: models.StrategyAtLeastOnce,
+	})
+	test.AssertNotError(t, err, "create job failed")
+	now := time.Now().UTC()
+	expires := types.NullTime{
+		Time:  now.Add(5 * time.Minute),
+		Valid: true,
+	}
+	qj, err := queued_jobs.Enqueue(RandomId("job_"), job.Name, now, expires, EmptyData)
+	test.AssertNotError(t, err, "create job failed")
+	return qj
+}
+
 // CreateRandomQueuedJob creates a queued job with a random UUID.
 func CreateRandomQueuedJob(t *testing.T, data json.RawMessage) *models.QueuedJob {
 	return createJobAndQueuedJob(t, SampleJob, data, true)

@@ -35,7 +35,7 @@ func Setup() (err error) {
 
 	query := fmt.Sprintf(`-- archived_jobs.Create
 INSERT INTO archived_jobs (%s) 
-SELECT id, $2, $4, $3, data
+SELECT id, $2, $4, $3, data, expires_at
 FROM queued_jobs 
 WHERE id=$1
 AND name=$2
@@ -110,7 +110,8 @@ func insertFields() string {
 	name,
 	attempts,
 	status,
-	data`
+	data,
+	expires_at`
 }
 
 func fields() string {
@@ -119,7 +120,8 @@ func fields() string {
 	attempts,
 	status,
 	data,
-	created_at`
+	created_at,
+	expires_at`
 }
 
 func args(aj *models.ArchivedJob, byteptr *[]byte) []interface{} {
@@ -131,5 +133,6 @@ func args(aj *models.ArchivedJob, byteptr *[]byte) []interface{} {
 		// can't scan into Data because of https://github.com/golang/go/issues/13905
 		byteptr,
 		&aj.CreatedAt,
+		&aj.ExpiresAt,
 	}
 }

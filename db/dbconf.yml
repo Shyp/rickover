@@ -13,15 +13,3 @@ circle:
 travis:
     driver: postgres
     open: user=rickover dbname=rickover_test sslmode=disable
-
-int:
-    driver: postgres
-    open: $DATABASE_URL
-
-stg:
-    driver: postgres
-    open: $DATABASE_URL
-
-prod:
-    driver: postgres
-    open: $DATABASE_URL

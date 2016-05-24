@@ -18,4 +18,5 @@ type ArchivedJob struct {
 	Status    JobStatus        `json:"status"`
 	CreatedAt time.Time        `json:"created_at"`
 	Data      json.RawMessage  `json:"data"`
+	ExpiresAt types.NullTime   `json:"expires_at"`
 }

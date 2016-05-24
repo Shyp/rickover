@@ -41,3 +41,7 @@ release:
 	bump_version minor config/config.go
 	git push origin master
 	git push origin master --tags
+
+migrate:
+	goose --env=development up
+	goose --env=test up
