@@ -31,6 +31,7 @@ func replayHandler() http.Handler {
 		var jobName string
 		var data json.RawMessage
 		qj, err := queued_jobs.GetRetry(id, 3)
+		var expiresAt types.NullTime
 		if err == nil {
 			if qj.Status == models.StatusQueued {
 				apierr := &rest.Error{
@@ -43,11 +44,13 @@ func replayHandler() http.Handler {
 			}
 			jobName = qj.Name
 			data = qj.Data
+			expiresAt = qj.ExpiresAt
 		} else if err == queued_jobs.ErrNotFound {
 			aj, err := archived_jobs.GetRetry(id, 3)
 			if err == nil {
 				jobName = aj.Name
 				data = aj.Data
+				expiresAt = aj.ExpiresAt
 			} else if err == archived_jobs.ErrNotFound {
 				notFound(w, new404(r))
 				go metrics.Increment("job.replay.not_found")
@@ -78,10 +81,7 @@ func replayHandler() http.Handler {
 			writeServerError(w, r, err)
 			return
 		}
-		// We don't know when the job expired, because we don't save that info
-		// in archived_jobs.
-		// https://github.com/Shyp/rickover/issues/2
-		queuedJob, err := queued_jobs.Enqueue(newId, jobName, time.Now(), types.NullTime{Valid: false}, data)
+		queuedJob, err := queued_jobs.Enqueue(newId, jobName, time.Now(), expiresAt, data)
 		if err != nil {
 			writeServerError(w, r, err)
 			return
