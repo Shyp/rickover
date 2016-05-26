@@ -9,6 +9,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/Shyp/rickover/Godeps/_workspace/src/github.com/Shyp/go-types"
 	"github.com/Shyp/rickover/models"
 	"github.com/Shyp/rickover/models/jobs"
 	"github.com/Shyp/rickover/server"
@@ -181,10 +182,13 @@ func Test202SuccessfulEnqueue(t *testing.T) {
 	defer db.TearDown(t)
 	_ = factory.CreateJob(t, factory.SampleJob)
 
+	expiry := time.Now().UTC().Add(5 * time.Minute)
 	w := httptest.NewRecorder()
 	ejr := &server.EnqueueJobRequest{
-		Data: factory.EmptyData,
+		Data:      factory.EmptyData,
+		ExpiresAt: types.NullTime{Valid: true, Time: expiry},
 	}
+
 	b := new(bytes.Buffer)
 	json.NewEncoder(b).Encode(ejr)
 	req, _ := http.NewRequest("PUT", "/v1/jobs/echo/job_6740b44e-13b9-475d-af06-979627e0e0d6", b)
@@ -199,7 +203,11 @@ func Test202SuccessfulEnqueue(t *testing.T) {
 	test.AssertEquals(t, j.Status, models.StatusQueued)
 	test.AssertEquals(t, j.Name, "echo")
 
-	diff := time.Since(j.RunAfter)
+	diff := j.ExpiresAt.Time.Sub(expiry)
+	test.Assert(t, diff < 20*time.Millisecond, "")
+	test.Assert(t, diff > -20*time.Millisecond, "")
+
+	diff = time.Since(j.RunAfter)
 	test.Assert(t, diff < 20*time.Millisecond, "")
 
 	diff = time.Since(j.CreatedAt)
