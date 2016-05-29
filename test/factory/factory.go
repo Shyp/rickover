@@ -1,4 +1,4 @@
-// Factories for building objects for tests.
+// Package factory contains helpers for instantiating tests.
 package factory
 
 import (
@@ -80,7 +80,7 @@ func CreateQueuedJob(t *testing.T, data json.RawMessage) *models.QueuedJob {
 // CreateQJ creates a job with a random name, and a random UUID.
 func CreateQJ(t *testing.T) *models.QueuedJob {
 	db.SetUp(t)
-	jobname := RandomId("")
+	jobname := RandomId("jobtype")
 	job, err := jobs.Create(models.Job{
 		Name:             jobname.String(),
 		Attempts:         11,
@@ -93,7 +93,9 @@ func CreateQJ(t *testing.T) *models.QueuedJob {
 		Time:  now.Add(5 * time.Minute),
 		Valid: true,
 	}
-	qj, err := queued_jobs.Enqueue(RandomId("job_"), job.Name, now, expires, EmptyData)
+	dat, err := json.Marshal(RD)
+	test.AssertNotError(t, err, "marshaling RD")
+	qj, err := queued_jobs.Enqueue(RandomId("job_"), job.Name, now, expires, dat)
 	test.AssertNotError(t, err, "create job failed")
 	return qj
 }
@@ -146,10 +148,11 @@ func createJobAndQueuedJob(t *testing.T, j models.Job, data json.RawMessage, ran
 }
 
 // Processor returns a simple JobProcessor, with a client pointing at the given
-// URL.
+// URL, and various sleeps set to 0.
 func Processor(url string) *services.JobProcessor {
-	jp := &services.JobProcessor{
-		Client: downstream.NewClient("jobs", "password", url),
+	return &services.JobProcessor{
+		Client:      downstream.NewClient("jobs", "password", url),
+		Timeout:     200 * time.Millisecond,
+		SleepFactor: 0,
 	}
-	return jp
 }

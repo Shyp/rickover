@@ -38,7 +38,10 @@ type JobProcessor struct {
 	// callback before marking the job as failed.
 	Timeout time.Duration
 
-	sleepFactor float64
+	// Multiplier used to determine how long to sleep between failed attempts
+	// to acquire a job. The formula for sleeps is 10 * (Factor) ^ (Attempts)
+	// ms. Set to 0 to not sleep between attempts.
+	SleepFactor float64
 }
 
 // NewJobProcessor creates a services.JobProcessor that makes requests to the
@@ -52,8 +55,9 @@ type JobProcessor struct {
 // has elapsed.
 func NewJobProcessor(downstreamUrl string, downstreamPassword string) *JobProcessor {
 	return &JobProcessor{
-		Client:  downstream.NewClient("jobs", downstreamPassword, downstreamUrl),
-		Timeout: DefaultTimeout,
+		Client:      downstream.NewClient("jobs", downstreamPassword, downstreamUrl),
+		Timeout:     DefaultTimeout,
+		SleepFactor: defaultSleepFactor,
 	}
 }
 
@@ -87,7 +91,7 @@ func jitter(val float64) float64 {
 }
 
 func (jp JobProcessor) Sleep(failedAttempts uint32) time.Duration {
-	multiplier := math.Pow(jp.sleepFactor, float64(failedAttempts))
+	multiplier := math.Pow(jp.SleepFactor, float64(failedAttempts))
 	if multiplier > maxMultiplier {
 		multiplier = maxMultiplier
 	}
