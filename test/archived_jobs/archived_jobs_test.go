@@ -30,7 +30,7 @@ func TestCreateJobReturnsJob(t *testing.T) {
 	test.AssertEquals(t, aj.Id.String(), qj.Id.String())
 	test.AssertEquals(t, aj.Status, models.StatusSucceeded)
 	test.AssertEquals(t, aj.Attempts, uint8(qj.Attempts))
-	test.AssertEquals(t, string(aj.Data), "{}")
+	test.AssertEquals(t, string(aj.Data), "{\"baz\": 17, \"foo\": [\"bar\", \"pik_345\"]}")
 	test.AssertEquals(t, aj.ExpiresAt.Valid, true)
 	test.AssertEquals(t, aj.ExpiresAt.Time, qj.ExpiresAt.Time)
 

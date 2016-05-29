@@ -16,7 +16,8 @@ import (
 
 func TestWorkerShutsDown(t *testing.T) {
 	t.Parallel()
-	pool := dequeuer.NewPool(factory.RandomId(""))
+	poolname := factory.RandomId("pool")
+	pool := dequeuer.NewPool(poolname.String())
 	for i := 0; i < 3; i++ {
 		pool.AddDequeuer(factory.Processor("http://example.com"))
 	}
