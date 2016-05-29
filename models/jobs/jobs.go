@@ -33,8 +33,8 @@ func Setup() (err error) {
 	}
 
 	insertJobStmt, err = db.Conn.Prepare(fmt.Sprintf(`-- jobs.Create
-	INSERT INTO jobs (%s) VALUES ($1, $2, $3, $4) RETURNING %s
-	`, fields(false), fields(true)))
+INSERT INTO jobs (%s) VALUES ($1, $2, $3, $4) RETURNING %s`,
+		fields(false), fields(true)))
 	if err != nil {
 		return err
 	}

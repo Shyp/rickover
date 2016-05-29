@@ -117,7 +117,12 @@ func (p *Pool) AddDequeuer(w Worker) error {
 	}
 	p.Dequeuers = append(p.Dequeuers, d)
 	p.wg.Add(1)
-	go d.Work(p.Name, &p.wg)
+	go func(d *Dequeuer) {
+		// 2^9 == ~500ms
+		initialJitter := jitter(math.Pow(d.sleepFactor, 9) * float64(time.Millisecond))
+		time.Sleep(time.Duration(initialJitter))
+		d.Work(p.Name, &p.wg)
+	}(d)
 	return nil
 }
 
@@ -163,7 +168,7 @@ func jitter(val float64) float64 {
 func (d *Dequeuer) Work(name string, wg *sync.WaitGroup) {
 	defer wg.Done()
 	failedAcquireCount := 0
-	waitDuration := time.Duration(jitter(float64(500 * time.Millisecond)))
+	waitDuration := time.Duration(0)
 	for {
 		select {
 		case <-d.QuitChan:

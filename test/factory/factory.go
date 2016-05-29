@@ -54,7 +54,10 @@ var SampleAtMostOnceJob = models.Job{
 
 // RandomId returns a random UUID with the given prefix.
 func RandomId(prefix string) types.PrefixUUID {
-	id, _ := uuid.NewV4()
+	id, err := uuid.NewV4()
+	if err != nil {
+		panic(err.Error())
+	}
 	return types.PrefixUUID{
 		UUID:   id,
 		Prefix: prefix,
