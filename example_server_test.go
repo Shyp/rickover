@@ -44,8 +44,6 @@ func Example_server() {
 
 	go setup.MeasureActiveQueries(5 * time.Second)
 
-	s := server.Get(server.DefaultAuthorizer)
-
 	log.Println("Listening on port 9090")
-	log.Fatal(http.ListenAndServe(":9090", handlers.LoggingHandler(os.Stdout, s)))
+	log.Fatal(http.ListenAndServe(":9090", handlers.LoggingHandler(os.Stdout, server.DefaultServer)))
 }
