@@ -65,10 +65,10 @@ func TestWorkerRetriesJSON503(t *testing.T) {
 	defer db.TearDown(t)
 
 	// make the test go faster
-	originalSleepWorker503Factor := services.SleepFactor
-	services.SleepFactor = 0
+	originalSleepWorker503Factor := services.UnavailableSleepFactor
+	services.UnavailableSleepFactor = 0
 	defer func() {
-		services.SleepFactor = originalSleepWorker503Factor
+		services.UnavailableSleepFactor = originalSleepWorker503Factor
 	}()
 
 	_, err := jobs.Create(factory.SampleJob)

@@ -4,6 +4,8 @@ import (
 	"database/sql"
 	"fmt"
 	"log"
+	"math"
+	"math/rand"
 	"strings"
 	"time"
 
@@ -14,14 +16,20 @@ import (
 	"github.com/Shyp/rickover/rest"
 )
 
-// SleepFactor determines how long the application should sleep between runs.
-var SleepFactor = 500
+// 10ms * 2^10 ~ 10 seconds between attempts
+var maxMultiplier = math.Pow(2, 10)
+
+const defaultSleepFactor = 2
+
+// UnavailableSleepFactor determines how long the application should sleep
+// between 503 Service Unavailable downstream responses.
+var UnavailableSleepFactor = 500
 
 // DefaultTimeout is the default amount of time a JobProcessor should wait for
-// a job to complete.
+// a job to complete, once it's been sent to the downstream server.
 var DefaultTimeout = 5 * time.Minute
 
-// JobProcessor implements the Worker interface.
+// JobProcessor is the default implementation of the Worker interface.
 type JobProcessor struct {
 	// A Client for making requests to the downstream server.
 	Client *downstream.Client
@@ -29,6 +37,8 @@ type JobProcessor struct {
 	// Amount of time we should wait for the downstream server to hit the
 	// callback before marking the job as failed.
 	Timeout time.Duration
+
+	sleepFactor float64
 }
 
 // NewJobProcessor creates a services.JobProcessor that makes requests to the
@@ -69,6 +79,21 @@ func (jp *JobProcessor) DoWork(qj *models.QueuedJob) error {
 	return waitForJob(qj, jp.Timeout)
 }
 
+// Jitter returns a value that's around the given val, but not exactly it. The
+// jitter is randomly chosen between 0.8 and 1.2 times the given value, evenly
+// distributed.
+func jitter(val float64) float64 {
+	return val*0.8 + rand.Float64()*0.2*2*val
+}
+
+func (jp JobProcessor) Sleep(failedAttempts uint32) time.Duration {
+	multiplier := math.Pow(jp.sleepFactor, float64(failedAttempts))
+	if multiplier > maxMultiplier {
+		multiplier = maxMultiplier
+	}
+	return 10 * time.Duration(jitter(multiplier)) * time.Millisecond
+}
+
 func (jp *JobProcessor) requestRetry(qj *models.QueuedJob) error {
 	log.Printf("processing job %s (type %s)", qj.Id.String(), qj.Name)
 	for i := uint8(0); i < 3; i++ {
@@ -91,7 +116,7 @@ func (jp *JobProcessor) requestRetry(qj *models.QueuedJob) error {
 			case *rest.Error:
 				if aerr.Id == "service_unavailable" {
 					go metrics.Increment("post_job.unavailable")
-					time.Sleep(time.Duration(1<<i*SleepFactor) * time.Millisecond)
+					time.Sleep(time.Duration(1<<i*UnavailableSleepFactor) * time.Millisecond)
 					continue
 				}
 				go metrics.Increment("dequeue.post_job.error")

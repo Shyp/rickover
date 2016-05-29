@@ -65,7 +65,7 @@ func Example_dequeuer() {
 
 	// CreatePools will read all job types out of the jobs table, then start
 	// all dequeuers for those jobs.
-	pools, err := dequeuer.CreatePools(jp)
+	pools, err := dequeuer.CreatePools(jp, 200*time.Millisecond)
 	if err != nil {
 		log.Fatal(err)
 	}

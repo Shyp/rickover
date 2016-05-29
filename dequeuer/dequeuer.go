@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"log"
-	"math"
 	"math/rand"
 	"sync"
 	"time"
@@ -16,11 +15,6 @@ import (
 	"github.com/Shyp/rickover/models/jobs"
 	"github.com/Shyp/rickover/models/queued_jobs"
 )
-
-const defaultSleepFactor = 2
-
-// 10ms * 2^10 ~ 10 seconds between attempts
-var maxMultiplier = math.Pow(2, 10)
 
 func init() {
 	rand.Seed(time.Now().UnixNano())
@@ -45,23 +39,37 @@ func (ps Pools) NumDequeuers() int {
 
 // CreatePools creates job pools for all jobs in the database. The provided
 // Worker w will be shared between all dequeuers, so it must be thread safe.
-func CreatePools(w Worker) (Pools, error) {
+func CreatePools(w Worker, maxInitialJitter time.Duration) (Pools, error) {
 	jobs, err := jobs.GetAll()
 	if err != nil {
 		return Pools{}, err
 	}
 
 	pools := make([]*Pool, len(jobs))
+	var wg sync.WaitGroup
 	for i, job := range jobs {
-		p := NewPool(job.Name)
-		for j := uint8(0); j < job.Concurrency; j++ {
-			err = p.AddDequeuer(w)
-			if err != nil {
-				return Pools{}, err
+		go func(i int, job *models.Job) {
+			p := NewPool(job.Name)
+			var innerwg sync.WaitGroup
+			for j := uint8(0); j < job.Concurrency; j++ {
+				innerwg.Add(1)
+				go func() {
+					time.Sleep(time.Duration(rand.Float64()) * maxInitialJitter)
+					err = p.AddDequeuer(w)
+					if err != nil {
+						// XXX return err via channel
+						log.Print(err)
+						return
+					}
+					innerwg.Done()
+				}()
 			}
-		}
-		pools[i] = p
+			innerwg.Wait()
+			pools[i] = p
+			wg.Done()
+		}(i, job)
 	}
+	wg.Wait()
 	return pools, nil
 }
 
@@ -79,8 +87,6 @@ type Dequeuer struct {
 	Id       int
 	QuitChan chan bool
 	W        Worker
-	// How long to sleep if there is no work to do.
-	sleepFactor float64
 }
 
 // A Worker does some work with a QueuedJob. Worker implementations may be
@@ -99,6 +105,11 @@ type Worker interface {
 	// HandleStatusCallback with a failed callback; errors are logged, but
 	// otherwise nothing else is done with them.
 	DoWork(*models.QueuedJob) error
+
+	// Sleep returns the amount of time to sleep between failed attempts to
+	// acquire a queued job. The default implementation sleeps for 20, 40, 80,
+	// 160, ..., up to a maximum of 10 seconds between attempts.
+	Sleep(failedAttempts uint32) time.Duration
 }
 
 // AddDequeuer adds a Dequeuer to the Pool. w should be the work that the
@@ -110,17 +121,13 @@ func (p *Pool) AddDequeuer(w Worker) error {
 	p.mu.Lock()
 	defer p.mu.Unlock()
 	d := &Dequeuer{
-		Id:          len(p.Dequeuers) + 1,
-		QuitChan:    make(chan bool, 1),
-		W:           w,
-		sleepFactor: defaultSleepFactor,
+		Id:       len(p.Dequeuers) + 1,
+		QuitChan: make(chan bool, 1),
+		W:        w,
 	}
 	p.Dequeuers = append(p.Dequeuers, d)
 	p.wg.Add(1)
 	go func(d *Dequeuer) {
-		// 2^9 == ~500ms
-		initialJitter := jitter(math.Pow(d.sleepFactor, 9) * float64(time.Millisecond))
-		time.Sleep(time.Duration(initialJitter))
 		d.Work(p.Name, &p.wg)
 	}(d)
 	return nil
@@ -158,16 +165,9 @@ func (p *Pool) Shutdown() error {
 	return nil
 }
 
-// Jitter returns a value that's around the given val, but not exactly it. The
-// jitter is randomly chosen between 0.8 and 1.2 times the given value, evenly
-// distributed.
-func jitter(val float64) float64 {
-	return val*0.8 + rand.Float64()*0.2*2*val
-}
-
 func (d *Dequeuer) Work(name string, wg *sync.WaitGroup) {
 	defer wg.Done()
-	failedAcquireCount := 0
+	failedAcquireCount := uint32(0)
 	waitDuration := time.Duration(0)
 	for {
 		select {
@@ -201,12 +201,7 @@ func (d *Dequeuer) Work(name string, wg *sync.WaitGroup) {
 				}
 
 				failedAcquireCount++
-				multiplier := math.Pow(d.sleepFactor, float64(failedAcquireCount))
-				if multiplier > maxMultiplier {
-					multiplier = maxMultiplier
-				}
-				multiplier = jitter(multiplier)
-				waitDuration = 10 * time.Duration(multiplier) * time.Millisecond
+				waitDuration = d.W.Sleep(failedAcquireCount)
 			}
 		}
 	}

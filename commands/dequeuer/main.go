@@ -62,7 +62,7 @@ func main() {
 	jp := services.NewJobProcessor(parsedUrl.String(), downstreamPassword)
 
 	// This creates a pool of dequeuers and starts them.
-	pools, err := dequeuer.CreatePools(jp)
+	pools, err := dequeuer.CreatePools(jp, 200*time.Millisecond)
 	checkError(err)
 
 	sigterm := make(chan os.Signal, 1)
