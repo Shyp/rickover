@@ -221,7 +221,7 @@ func createJob() http.Handler {
 		err := json.NewDecoder(r.Body).Decode(&jr)
 		if err != nil {
 			badRequest(w, r, &rest.Error{
-				Id:    "invalid_request",
+				ID:    "invalid_request",
 				Title: "Invalid request: bad JSON. Double check the types of the fields you sent",
 			})
 			return
@@ -237,7 +237,7 @@ func createJob() http.Handler {
 		if jr.DeliveryStrategy != models.StrategyAtLeastOnce && jr.DeliveryStrategy != models.StrategyAtMostOnce {
 			err := &rest.Error{
 				Instance: r.URL.Path,
-				Id:       "invalid_delivery_strategy",
+				ID:       "invalid_delivery_strategy",
 				Title:    fmt.Sprintf("Invalid delivery strategy: %s", jr.DeliveryStrategy),
 			}
 			badRequest(w, r, err)
@@ -247,7 +247,7 @@ func createJob() http.Handler {
 		if jr.DeliveryStrategy == models.StrategyAtMostOnce && jr.Attempts > 1 {
 			err := &rest.Error{
 				Instance: r.URL.Path,
-				Id:       "invalid_attempts",
+				ID:       "invalid_attempts",
 				Title:    "Cannot set retry attempts to a number greater than 1 if the delivery strategy is at_most_once",
 				Detail:   "The at_most_once strategy implies only one attempt will be made.",
 			}
@@ -278,7 +278,7 @@ func createJob() http.Handler {
 			case *dberror.Error:
 				apierr := &rest.Error{
 					Title:    terr.Message,
-					Id:       "invalid_parameter",
+					ID:       "invalid_parameter",
 					Instance: r.URL.Path,
 				}
 				badRequest(w, r, apierr)
@@ -358,7 +358,7 @@ func (j *jobStatusGetter) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			// consider just serializing it if this is too annoying
 			nfe := &rest.Error{
 				Title:    "Job exists, but with a different name",
-				Id:       "job_not_found",
+				ID:       "job_not_found",
 				Instance: r.URL.Path,
 			}
 			notFound(w, nfe)
@@ -417,7 +417,7 @@ func (j *jobStatusUpdater) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	err := json.NewDecoder(r.Body).Decode(&jsr)
 	if err != nil {
 		badRequest(w, r, &rest.Error{
-			Id:    "invalid_request",
+			ID:    "invalid_request",
 			Title: "Invalid request: bad JSON. Double check the types of the fields you sent",
 		})
 		return
@@ -432,7 +432,7 @@ func (j *jobStatusUpdater) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 	if jsr.Status != models.StatusSucceeded && jsr.Status != models.StatusFailed {
 		badRequest(w, r, &rest.Error{
-			Id:       "invalid_status",
+			ID:       "invalid_status",
 			Title:    fmt.Sprintf("Invalid job status: %s", jsr.Status),
 			Instance: r.URL.Path,
 		})
@@ -449,7 +449,7 @@ func (j *jobStatusUpdater) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 	} else if err == queued_jobs.ErrNotFound {
 		badRequest(w, r, &rest.Error{
-			Id:       "duplicate_status_request",
+			ID:       "duplicate_status_request",
 			Title:    "This job has already been archived, or was never queued",
 			Instance: r.URL.Path,
 		})
@@ -477,7 +477,7 @@ func (j *jobEnqueuer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	err := json.NewDecoder(r.Body).Decode(&ejr)
 	if err != nil {
 		badRequest(w, r, &rest.Error{
-			Id:    "invalid_request",
+			ID:    "invalid_request",
 			Title: "Invalid request: bad JSON. Double check the types of the fields you sent",
 		})
 		return
@@ -514,7 +514,7 @@ func (j *jobEnqueuer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 	if len(ejr.Data) > MAX_ENQUEUE_DATA_SIZE {
 		err := &rest.Error{
-			Id:    "entity_too_large",
+			ID:    "entity_too_large",
 			Title: "Data parameter is too large (100KB max)",
 		}
 		w.WriteHeader(http.StatusRequestEntityTooLarge)
@@ -530,7 +530,7 @@ func (j *jobEnqueuer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			if err != nil && err == sql.ErrNoRows {
 				nfe := &rest.Error{
 					Title:    fmt.Sprintf("Job type %s not found", name),
-					Id:       "job_type_not_found",
+					ID:       "job_type_not_found",
 					Instance: fmt.Sprintf("/v1/jobs/%s", name),
 				}
 				notFound(w, nfe)
@@ -539,7 +539,7 @@ func (j *jobEnqueuer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			} else {
 				alreadyArchived := &rest.Error{
 					Title:    "Job has already been archived",
-					Id:       "job_already_archived",
+					ID:       "job_already_archived",
 					Instance: fmt.Sprintf("/v1/jobs/%s/%s", name, id.String()),
 				}
 				badRequest(w, r, alreadyArchived)
@@ -557,7 +557,7 @@ func (j *jobEnqueuer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			}
 			apierr := &rest.Error{
 				Title:    terr.Message,
-				Id:       "invalid_parameter",
+				ID:       "invalid_parameter",
 				Instance: r.URL.Path,
 			}
 			badRequest(w, r, apierr)

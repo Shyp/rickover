@@ -31,7 +31,7 @@ var sampleJob = models.Job{
 func TestEnqueue(t *testing.T) {
 	defer db.TearDown(t)
 	qj := factory.CreateQueuedJob(t, factory.EmptyData)
-	test.AssertEquals(t, qj.Id.String(), "job_6740b44e-13b9-475d-af06-979627e0e0d6")
+	test.AssertEquals(t, qj.ID.String(), "job_6740b44e-13b9-475d-af06-979627e0e0d6")
 	test.AssertEquals(t, qj.Name, "echo")
 	test.AssertEquals(t, qj.Attempts, uint8(7))
 	test.AssertEquals(t, qj.Status, models.StatusQueued)
@@ -104,11 +104,11 @@ func TestEnqueueUnknownJobTypeErrNoRows(t *testing.T) {
 func TestEnqueueWithExistingArchivedJobFails(t *testing.T) {
 	qj := factory.CreateQueuedJob(t, factory.EmptyData)
 	defer db.TearDown(t)
-	err := services.HandleStatusCallback(qj.Id, qj.Name, models.StatusSucceeded, qj.Attempts)
+	err := services.HandleStatusCallback(qj.ID, qj.Name, models.StatusSucceeded, qj.Attempts)
 	test.AssertNotError(t, err, "")
 	expiresAt := types.NullTime{Valid: false}
 	runAfter := time.Now().UTC()
-	_, err = queued_jobs.Enqueue(qj.Id, "echo", runAfter, expiresAt, empty)
+	_, err = queued_jobs.Enqueue(qj.ID, "echo", runAfter, expiresAt, empty)
 	test.AssertError(t, err, "")
 	test.AssertEquals(t, err.Error(), "Job type echo does not exist or the job with that id has already been archived")
 }
@@ -124,15 +124,15 @@ func TestNonexistentReturnsErrNoRows(t *testing.T) {
 func TestGetQueuedJob(t *testing.T) {
 	defer db.TearDown(t)
 	qj := factory.CreateQueuedJob(t, factory.EmptyData)
-	gotQj, err := queued_jobs.Get(qj.Id)
+	gotQj, err := queued_jobs.Get(qj.ID)
 	test.AssertNotError(t, err, "")
-	test.AssertEquals(t, gotQj.Id.String(), "job_6740b44e-13b9-475d-af06-979627e0e0d6")
+	test.AssertEquals(t, gotQj.ID.String(), "job_6740b44e-13b9-475d-af06-979627e0e0d6")
 }
 
 func TestDeleteQueuedJob(t *testing.T) {
 	defer db.TearDown(t)
 	qj := factory.CreateQueuedJob(t, factory.EmptyData)
-	err := queued_jobs.Delete(qj.Id)
+	err := queued_jobs.Delete(qj.ID)
 	test.AssertNotError(t, err, "")
 }
 
@@ -151,22 +151,22 @@ func TestDataRoundtrip(t *testing.T) {
 	test.AssertNotError(t, err, "")
 
 	type RemoteAccounts struct {
-		Id string
+		ID string
 	}
 
 	type User struct {
-		Id             string
+		ID             string
 		Balance        uint64
 		CreatedAt      time.Time
 		RemoteAccounts RemoteAccounts
 		Pickups        []string
 	}
 	user := &User{
-		Id:        "usr_123",
+		ID:        "usr_123",
 		Balance:   uint64(365),
 		CreatedAt: time.Now().UTC(),
 		RemoteAccounts: RemoteAccounts{
-			Id: "rem_123",
+			ID: "rem_123",
 		},
 		Pickups: []string{"pik_123", "pik_234"},
 	}
@@ -179,15 +179,15 @@ func TestDataRoundtrip(t *testing.T) {
 	qj, err := queued_jobs.Enqueue(factory.JobId, "echo", runAfter, expiresAt, d)
 	test.AssertNotError(t, err, "")
 
-	gotQj, err := queued_jobs.Get(qj.Id)
+	gotQj, err := queued_jobs.Get(qj.ID)
 	test.AssertNotError(t, err, "")
 
 	var u User
 	err = json.Unmarshal(gotQj.Data, &u)
 	test.AssertNotError(t, err, "expected to be able to convert data to a User object")
-	test.AssertEquals(t, u.Id, "usr_123")
+	test.AssertEquals(t, u.ID, "usr_123")
 	test.AssertEquals(t, u.Balance, uint64(365))
-	test.AssertEquals(t, u.RemoteAccounts.Id, "rem_123")
+	test.AssertEquals(t, u.RemoteAccounts.ID, "rem_123")
 	test.AssertEquals(t, u.Pickups[0], "pik_123")
 	test.AssertEquals(t, u.Pickups[1], "pik_234")
 	test.AssertEquals(t, len(u.Pickups), 2)
@@ -202,7 +202,7 @@ func TestAcquireReturnsCorrectValues(t *testing.T) {
 
 	gotQj, err := queued_jobs.Acquire(sampleJob.Name)
 	test.AssertNotError(t, err, "")
-	test.AssertEquals(t, gotQj.Id.String(), factory.JobId.String())
+	test.AssertEquals(t, gotQj.ID.String(), factory.JobId.String())
 	test.AssertEquals(t, gotQj.Status, models.StatusInProgress)
 }
 
@@ -256,7 +256,7 @@ func TestAcquireDoesntGetInProgressJob(t *testing.T) {
 	test.AssertNotError(t, err, "")
 	qj, err = queued_jobs.Acquire(qj.Name)
 	test.AssertNotError(t, err, "")
-	test.AssertDeepEquals(t, qj.Id, factory.JobId)
+	test.AssertDeepEquals(t, qj.ID, factory.JobId)
 
 	_, err = queued_jobs.Acquire(qj.Name)
 	test.AssertEquals(t, err, sql.ErrNoRows)
@@ -265,7 +265,7 @@ func TestAcquireDoesntGetInProgressJob(t *testing.T) {
 func TestDecrementDecrements(t *testing.T) {
 	defer db.TearDown(t)
 	qj := factory.CreateQueuedJob(t, factory.EmptyData)
-	qj, err := queued_jobs.Decrement(qj.Id, 7, time.Now().Add(1*time.Minute))
+	qj, err := queued_jobs.Decrement(qj.ID, 7, time.Now().Add(1*time.Minute))
 	test.AssertNotError(t, err, "")
 	test.AssertEquals(t, qj.Attempts, uint8(6))
 	test.AssertBetween(t, int64(qj.RunAfter.Sub(time.Now())), int64(59*time.Second), int64(1*time.Minute))
@@ -274,7 +274,7 @@ func TestDecrementDecrements(t *testing.T) {
 func TestDecrementErrNoRowsWrongAttempts(t *testing.T) {
 	defer db.TearDown(t)
 	qj := factory.CreateQueuedJob(t, factory.EmptyData)
-	_, err := queued_jobs.Decrement(qj.Id, 1, time.Now())
+	_, err := queued_jobs.Decrement(qj.ID, 1, time.Now())
 	test.AssertEquals(t, err, sql.ErrNoRows)
 }
 
@@ -319,10 +319,10 @@ func TestOldInProgress(t *testing.T) {
 	jobs, err := queued_jobs.GetOldInProgressJobs(time.Now().UTC().Add(40 * time.Millisecond))
 	test.AssertNotError(t, err, "")
 	test.AssertEquals(t, len(jobs), 2)
-	if jobs[0].Id.String() == qj1.Id.String() {
-		test.AssertEquals(t, jobs[1].Id.String(), qj2.Id.String())
+	if jobs[0].ID.String() == qj1.ID.String() {
+		test.AssertEquals(t, jobs[1].ID.String(), qj2.ID.String())
 	} else {
-		test.AssertEquals(t, jobs[1].Id.String(), qj1.Id.String())
+		test.AssertEquals(t, jobs[1].ID.String(), qj1.ID.String())
 	}
 	jobs, err = queued_jobs.GetOldInProgressJobs(time.Now().UTC().Add(-1 * time.Second))
 	test.AssertNotError(t, err, "")

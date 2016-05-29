@@ -36,7 +36,7 @@ func replayHandler() http.Handler {
 			if qj.Status == models.StatusQueued {
 				apierr := &rest.Error{
 					Title:    "Cannot replay a queued job. Wait for it to start",
-					Id:       "invalid_replay_attempt",
+					ID:       "invalid_replay_attempt",
 					Instance: r.URL.Path,
 				}
 				badRequest(w, r, apierr)
@@ -69,7 +69,7 @@ func replayHandler() http.Handler {
 		if name != "" && jobName != name {
 			nfe := &rest.Error{
 				Title:    "Job exists, but with a different name",
-				Id:       "job_not_found",
+				ID:       "job_not_found",
 				Instance: r.URL.Path,
 			}
 			notFound(w, nfe)

@@ -72,7 +72,7 @@ func TestWorkerMakesCorrectRequest(t *testing.T) {
 	defer pool.Shutdown()
 	select {
 	case <-c1:
-		test.AssertEquals(t, path, fmt.Sprintf("/v1/jobs/%s/%s", qj.Name, qj.Id.String()))
+		test.AssertEquals(t, path, fmt.Sprintf("/v1/jobs/%s/%s", qj.Name, qj.ID.String()))
 		test.AssertEquals(t, method, "POST")
 		test.AssertEquals(t, ok, true)
 		test.AssertEquals(t, user, "jobs")

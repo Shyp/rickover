@@ -34,7 +34,7 @@ func Test401NoCredentials(t *testing.T) {
 	err := json.Unmarshal(w.Body.Bytes(), &e)
 	test.AssertNotError(t, err, "")
 	test.AssertEquals(t, e.Title, "Unauthorized. Please include your API credentials")
-	test.AssertEquals(t, e.Id, "unauthorized")
+	test.AssertEquals(t, e.ID, "unauthorized")
 }
 
 func Test401UnknownUser(t *testing.T) {
@@ -54,7 +54,7 @@ func Test401UnknownUser(t *testing.T) {
 	err := json.Unmarshal(w.Body.Bytes(), &e)
 	test.AssertNotError(t, err, "")
 	test.AssertEquals(t, e.Title, "Username or password are invalid. Please double check your credentials")
-	test.AssertEquals(t, e.Id, "forbidden")
+	test.AssertEquals(t, e.ID, "forbidden")
 }
 
 func Test401UnknownPassword(t *testing.T) {
@@ -74,7 +74,7 @@ func Test401UnknownPassword(t *testing.T) {
 	err := json.Unmarshal(w.Body.Bytes(), &e)
 	test.AssertNotError(t, err, "")
 	test.AssertEquals(t, e.Title, "Incorrect password for user 401-unknown-password")
-	test.AssertEquals(t, e.Id, "incorrect_password")
+	test.AssertEquals(t, e.ID, "incorrect_password")
 }
 
 func Test400NoBody(t *testing.T) {
@@ -95,7 +95,7 @@ func Test400NoBody(t *testing.T) {
 	err := json.Unmarshal(w.Body.Bytes(), &e)
 	test.AssertNotError(t, err, "")
 	test.AssertEquals(t, e.Title, "Missing required field: data")
-	test.AssertEquals(t, e.Id, "missing_parameter")
+	test.AssertEquals(t, e.ID, "missing_parameter")
 	test.AssertEquals(t, e.Instance, "/v1/jobs/echo/job_123")
 }
 
@@ -116,7 +116,7 @@ func Test400EmptyBody(t *testing.T) {
 	err = json.Unmarshal(w.Body.Bytes(), &e)
 	test.AssertNotError(t, err, "")
 	test.AssertEquals(t, e.Title, "Missing required field: data")
-	test.AssertEquals(t, e.Id, "missing_parameter")
+	test.AssertEquals(t, e.ID, "missing_parameter")
 	test.AssertEquals(t, e.Instance, "/v1/jobs/echo/job_123")
 }
 
@@ -137,7 +137,7 @@ func Test400InvalidUUID(t *testing.T) {
 	err := json.Unmarshal(w.Body.Bytes(), &e)
 	test.AssertNotError(t, err, "")
 	test.AssertEquals(t, e.Title, "Could not parse \"job_123\" as a UUID with a prefix")
-	test.AssertEquals(t, e.Id, "invalid_uuid")
+	test.AssertEquals(t, e.ID, "invalid_uuid")
 }
 
 // Would be great to 400 this but it's difficult with some of the route
@@ -179,5 +179,5 @@ func Test413TooLargeJSON(t *testing.T) {
 	err := json.Unmarshal(w.Body.Bytes(), &e)
 	test.AssertNotError(t, err, "")
 	test.AssertEquals(t, e.Title, "Data parameter is too large (100KB max)")
-	test.AssertEquals(t, e.Id, "entity_too_large")
+	test.AssertEquals(t, e.ID, "entity_too_large")
 }

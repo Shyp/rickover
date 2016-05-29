@@ -84,7 +84,7 @@ type Pool struct {
 }
 
 type Dequeuer struct {
-	Id       int
+	ID       int
 	QuitChan chan bool
 	W        Worker
 }
@@ -121,7 +121,7 @@ func (p *Pool) AddDequeuer(w Worker) error {
 	p.mu.Lock()
 	defer p.mu.Unlock()
 	d := &Dequeuer{
-		Id:       len(p.Dequeuers) + 1,
+		ID:       len(p.Dequeuers) + 1,
 		QuitChan: make(chan bool, 1),
 		W:        w,
 	}
@@ -172,7 +172,7 @@ func (d *Dequeuer) Work(name string, wg *sync.WaitGroup) {
 	for {
 		select {
 		case <-d.QuitChan:
-			log.Printf("%s worker %d quitting\n", name, d.Id)
+			log.Printf("%s worker %d quitting\n", name, d.ID)
 			return
 
 		case <-time.After(waitDuration):
@@ -184,7 +184,7 @@ func (d *Dequeuer) Work(name string, wg *sync.WaitGroup) {
 				waitDuration = time.Duration(0)
 				err = d.W.DoWork(qj)
 				if err != nil {
-					log.Printf("worker: Error processing job %s: %s", qj.Id.String(), err)
+					log.Printf("worker: Error processing job %s: %s", qj.ID.String(), err)
 					go metrics.Increment(fmt.Sprintf("dequeue.%s.error", name))
 				} else {
 					go metrics.Increment(fmt.Sprintf("dequeue.%s.success", name))

@@ -67,7 +67,7 @@ func Create(id types.PrefixUUID, name string, status models.JobStatus, attempt u
 		err = dberror.GetError(err)
 		return nil, err
 	}
-	aj.Id.Prefix = Prefix
+	aj.ID.Prefix = Prefix
 	aj.Data = json.RawMessage(bt)
 	return aj, nil
 }
@@ -88,7 +88,7 @@ func Get(id types.PrefixUUID) (*models.ArchivedJob, error) {
 		err = dberror.GetError(err)
 		return nil, err
 	}
-	aj.Id.Prefix = Prefix
+	aj.ID.Prefix = Prefix
 	aj.Data = json.RawMessage(bt)
 	return aj, nil
 }
@@ -126,7 +126,7 @@ func fields() string {
 
 func args(aj *models.ArchivedJob, byteptr *[]byte) []interface{} {
 	return []interface{}{
-		&aj.Id,
+		&aj.ID,
 		&aj.Name,
 		&aj.Attempts,
 		&aj.Status,

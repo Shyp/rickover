@@ -12,7 +12,7 @@ import (
 // ArchivedJob records are immutable, once they are stored in the database,
 // they are never written, updated, or moved back to the jobs table.
 type ArchivedJob struct {
-	Id        types.PrefixUUID `json:"id"`
+	ID        types.PrefixUUID `json:"id"`
 	Name      string           `json:"name"`
 	Attempts  uint8            `json:"attempts"`
 	Status    JobStatus        `json:"status"`

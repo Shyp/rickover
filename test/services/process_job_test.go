@@ -97,7 +97,7 @@ func TestWorkerRetriesJSON503(t *testing.T) {
 			json.NewEncoder(w).Encode(&rest.Error{
 				Title:  "Service Unavailable",
 				Detail: "The server will be shutting down momentarily and cannot accept new work.",
-				Id:     "service_unavailable",
+				ID:     "service_unavailable",
 			})
 		} else {
 			w.Header().Set("Content-Type", "application/json; charset=utf-8")
@@ -106,7 +106,7 @@ func TestWorkerRetriesJSON503(t *testing.T) {
 			test.AssertNotError(t, err, "")
 
 			// Cheating, hit the internal success callback.
-			callbackErr := services.HandleStatusCallback(qj.Id, "echo", models.StatusSucceeded, uint8(5))
+			callbackErr := services.HandleStatusCallback(qj.ID, "echo", models.StatusSucceeded, uint8(5))
 			test.AssertNotError(t, callbackErr, "")
 		}
 	}))
@@ -127,7 +127,7 @@ func TestWorkerWaitsConnectTimeout(t *testing.T) {
 
 	qj := factory.CreateQueuedJob(t, factory.EmptyData)
 	go func() {
-		err := services.HandleStatusCallback(qj.Id, qj.Name, models.StatusSucceeded, qj.Attempts)
+		err := services.HandleStatusCallback(qj.ID, qj.Name, models.StatusSucceeded, qj.Attempts)
 		test.AssertNotError(t, err, "")
 	}()
 
@@ -157,14 +157,14 @@ func TestWorkerWaitsRequestTimeout(t *testing.T) {
 
 	qj := factory.CreateQueuedJob(t, factory.EmptyData)
 	go func() {
-		err := services.HandleStatusCallback(qj.Id, qj.Name, models.StatusSucceeded, qj.Attempts)
+		err := services.HandleStatusCallback(qj.ID, qj.Name, models.StatusSucceeded, qj.Attempts)
 		test.AssertNotError(t, err, "")
 	}()
 
 	workErr := jp.DoWork(qj)
 	test.AssertNotError(t, workErr, "")
 	wg.Wait()
-	aj, err := archived_jobs.Get(qj.Id)
+	aj, err := archived_jobs.Get(qj.ID)
 	test.AssertNotError(t, err, "")
 	test.AssertEquals(t, aj.Status, models.StatusSucceeded)
 }
@@ -185,7 +185,7 @@ func TestWorkerDoesNotWaitConnectionFailure(t *testing.T) {
 	qj := factory.CreateAtMostOnceJob(t, factory.EmptyData)
 	err := jp.DoWork(qj)
 	test.AssertNotError(t, err, "")
-	aj, err := archived_jobs.Get(qj.Id)
+	aj, err := archived_jobs.Get(qj.ID)
 	test.AssertNotError(t, err, "")
 	test.AssertEquals(t, aj.Status, models.StatusFailed)
 }

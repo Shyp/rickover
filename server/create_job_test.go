@@ -46,7 +46,7 @@ func Test400MissingId(t *testing.T) {
 		t.Fatal(err)
 	}
 	test.AssertEquals(t, e.Title, "Missing required field: name")
-	test.AssertEquals(t, e.Id, "missing_parameter")
+	test.AssertEquals(t, e.ID, "missing_parameter")
 	test.AssertEquals(t, e.Instance, "/v1/jobs")
 }
 
@@ -67,7 +67,7 @@ func Test400MissingStrategy(t *testing.T) {
 	err = json.Unmarshal(w.Body.Bytes(), &e)
 	test.AssertNotError(t, err, "")
 	test.AssertEquals(t, e.Title, "Missing required field: delivery_strategy")
-	test.AssertEquals(t, e.Id, "missing_parameter")
+	test.AssertEquals(t, e.ID, "missing_parameter")
 }
 
 func Test400InvalidStrategy(t *testing.T) {
@@ -88,7 +88,7 @@ func Test400InvalidStrategy(t *testing.T) {
 	err = json.Unmarshal(w.Body.Bytes(), &e)
 	test.AssertNotError(t, err, "")
 	test.AssertEquals(t, e.Title, "Invalid delivery strategy: foo")
-	test.AssertEquals(t, e.Id, "invalid_delivery_strategy")
+	test.AssertEquals(t, e.ID, "invalid_delivery_strategy")
 }
 
 func Test400AtMostOnceAndAttempts(t *testing.T) {

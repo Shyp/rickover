@@ -19,7 +19,7 @@ var defaultHttpClient = &http.Client{Timeout: defaultTimeout}
 
 // Client is a generic Rest client for making HTTP requests.
 type Client struct {
-	Id     string
+	ID     string
 	Token  string
 	Client *http.Client
 	Base   string
@@ -30,7 +30,7 @@ type Client struct {
 // set to 6.5 seconds.
 func NewClient(user, pass, base string) *Client {
 	return &Client{
-		Id:     user,
+		ID:     user,
 		Token:  pass,
 		Client: defaultHttpClient,
 		Base:   base,
@@ -44,7 +44,7 @@ func (c *Client) NewRequest(method, path string, body io.Reader) (*http.Request,
 	if err != nil {
 		return nil, err
 	}
-	req.SetBasicAuth(c.Id, c.Token)
+	req.SetBasicAuth(c.ID, c.Token)
 	req.Header.Add("User-Agent", fmt.Sprintf("shyp-go/v%s", config.Version))
 	if method == "POST" || method == "PUT" {
 		req.Header.Add("Content-Type", "application/json; charset=utf-8")
@@ -101,7 +101,7 @@ func (c *Client) Do(r *http.Request, v interface{}) error {
 				err.Detail = detail.(string)
 			}
 			if id, ok := errMap["id"]; ok {
-				err.Id = id.(string)
+				err.ID = id.(string)
 			}
 			if instance, ok := errMap["instance"]; ok {
 				err.Instance = instance.(string)

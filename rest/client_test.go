@@ -41,7 +41,7 @@ func TestPostError(t *testing.T) {
 		w.WriteHeader(http.StatusBadRequest)
 		json.NewEncoder(w).Encode(&Error{
 			Title: "bad request",
-			Id:    "something_bad",
+			ID:    "something_bad",
 		})
 	}))
 	defer s.Close()

@@ -25,9 +25,9 @@ func TestCreateJobReturnsJob(t *testing.T) {
 	t.Parallel()
 	qj := factory.CreateQJ(t)
 	defer db.TearDown(t)
-	aj, err := archived_jobs.Create(qj.Id, qj.Name, models.StatusSucceeded, qj.Attempts)
+	aj, err := archived_jobs.Create(qj.ID, qj.Name, models.StatusSucceeded, qj.Attempts)
 	test.AssertNotError(t, err, "")
-	test.AssertEquals(t, aj.Id.String(), qj.Id.String())
+	test.AssertEquals(t, aj.ID.String(), qj.ID.String())
 	test.AssertEquals(t, aj.Status, models.StatusSucceeded)
 	test.AssertEquals(t, aj.Attempts, uint8(qj.Attempts))
 	test.AssertEquals(t, string(aj.Data), "{\"baz\": 17, \"foo\": [\"bar\", \"pik_345\"]}")
@@ -43,9 +43,9 @@ func TestCreateJobReturnsJob(t *testing.T) {
 func TestArchivedJobFailsIfJobExists(t *testing.T) {
 	qj := factory.CreateQueuedJob(t, factory.EmptyData)
 	defer db.TearDown(t)
-	_, err := archived_jobs.Create(qj.Id, "echo", models.StatusSucceeded, 7)
+	_, err := archived_jobs.Create(qj.ID, "echo", models.StatusSucceeded, 7)
 	test.AssertNotError(t, err, "")
-	_, err = archived_jobs.Create(qj.Id, "echo", models.StatusSucceeded, 7)
+	_, err = archived_jobs.Create(qj.ID, "echo", models.StatusSucceeded, 7)
 	test.AssertError(t, err, "")
 	switch terr := err.(type) {
 	case *dberror.Error:
@@ -63,12 +63,12 @@ func TestArchivedJobFailsIfJobExists(t *testing.T) {
 func TestCreateJobStoresJob(t *testing.T) {
 	qj := factory.CreateQueuedJob(t, factory.EmptyData)
 	defer db.TearDown(t)
-	aj, err := archived_jobs.Create(qj.Id, "echo", models.StatusSucceeded, 7)
+	aj, err := archived_jobs.Create(qj.ID, "echo", models.StatusSucceeded, 7)
 	test.AssertNotError(t, err, "")
-	aj, err = archived_jobs.Get(aj.Id)
+	aj, err = archived_jobs.Get(aj.ID)
 	test.AssertNotError(t, err, "")
 
-	test.AssertEquals(t, aj.Id.String(), qj.Id.String())
+	test.AssertEquals(t, aj.ID.String(), qj.ID.String())
 	test.AssertEquals(t, aj.Status, models.StatusSucceeded)
 	test.AssertEquals(t, aj.Attempts, uint8(7))
 	test.AssertEquals(t, string(aj.Data), "{}")
@@ -92,6 +92,6 @@ func TestCreateArchivedJobWithNoQueuedReturnsErrNoRows(t *testing.T) {
 func TestCreateArchivedJobWithWrongNameReturnsErrNoRows(t *testing.T) {
 	qj := factory.CreateQueuedJob(t, factory.EmptyData)
 	defer db.TearDown(t)
-	_, err := archived_jobs.Create(qj.Id, "wrong-job-name", models.StatusSucceeded, 7)
+	_, err := archived_jobs.Create(qj.ID, "wrong-job-name", models.StatusSucceeded, 7)
 	test.AssertEquals(t, err, queued_jobs.ErrNotFound)
 }

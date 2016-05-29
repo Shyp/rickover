@@ -41,7 +41,7 @@ type Client struct {
 // NewClient creates a new Client.
 func NewClient(id, token, base string) *Client {
 	c := &Client{&rest.Client{
-		Id:     id,
+		ID:     id,
 		Token:  token,
 		Client: &http.Client{Timeout: defaultHTTPTimeout},
 		Base:   base,

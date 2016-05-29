@@ -27,7 +27,7 @@ func Test400EmptyStatusBody(t *testing.T) {
 	err = json.Unmarshal(w.Body.Bytes(), &e)
 	test.AssertNotError(t, err, "")
 	test.AssertEquals(t, e.Title, "Missing required field: status")
-	test.AssertEquals(t, e.Id, "missing_parameter")
+	test.AssertEquals(t, e.ID, "missing_parameter")
 	test.AssertEquals(t, e.Instance, "/v1/jobs/echo/job_123")
 }
 
@@ -47,5 +47,5 @@ func Test400EmptyAttempts(t *testing.T) {
 	err := json.Unmarshal(w.Body.Bytes(), &e)
 	test.AssertNotError(t, err, "")
 	test.AssertEquals(t, e.Title, "Missing required field: attempt")
-	test.AssertEquals(t, e.Id, "missing_parameter")
+	test.AssertEquals(t, e.ID, "missing_parameter")
 }

@@ -102,7 +102,7 @@ func TestRetrieveJob(t *testing.T) {
 	var qj models.QueuedJob
 	err := json.NewDecoder(w.Body).Decode(&qj)
 	test.AssertNotError(t, err, "")
-	test.AssertEquals(t, qj.Id.String(), "job_6740b44e-13b9-475d-af06-979627e0e0d6")
+	test.AssertEquals(t, qj.ID.String(), "job_6740b44e-13b9-475d-af06-979627e0e0d6")
 	test.AssertEquals(t, qj.Name, "echo")
 	test.AssertEquals(t, qj.Status, models.StatusQueued)
 }
@@ -119,7 +119,7 @@ func TestRetrieveJobNoName(t *testing.T) {
 	var qj models.QueuedJob
 	err := json.NewDecoder(w.Body).Decode(&qj)
 	test.AssertNotError(t, err, "")
-	test.AssertEquals(t, qj.Id.String(), "job_6740b44e-13b9-475d-af06-979627e0e0d6")
+	test.AssertEquals(t, qj.ID.String(), "job_6740b44e-13b9-475d-af06-979627e0e0d6")
 	test.AssertEquals(t, qj.Name, "echo")
 	test.AssertEquals(t, qj.Status, models.StatusQueued)
 }
@@ -135,7 +135,7 @@ func TestRetrieveArchivedJob(t *testing.T) {
 	var aj models.ArchivedJob
 	err := json.NewDecoder(w.Body).Decode(&aj)
 	test.AssertNotError(t, err, "")
-	test.AssertEquals(t, aj.Id.String(), "job_6740b44e-13b9-475d-af06-979627e0e0d6")
+	test.AssertEquals(t, aj.ID.String(), "job_6740b44e-13b9-475d-af06-979627e0e0d6")
 	test.AssertEquals(t, aj.Name, "echo")
 	test.AssertEquals(t, aj.Status, models.StatusSucceeded)
 }
@@ -151,7 +151,7 @@ func TestReplayJob(t *testing.T) {
 	var qj models.QueuedJob
 	err := json.NewDecoder(w.Body).Decode(&qj)
 	test.AssertNotError(t, err, "")
-	test.AssertNotEquals(t, qj.Id.String(), "job_6740b44e-13b9-475d-af06-979627e0e0d6")
+	test.AssertNotEquals(t, qj.ID.String(), "job_6740b44e-13b9-475d-af06-979627e0e0d6")
 }
 
 func TestReplayJobWithNoName(t *testing.T) {
@@ -165,14 +165,14 @@ func TestReplayJobWithNoName(t *testing.T) {
 	var qj models.QueuedJob
 	err := json.NewDecoder(w.Body).Decode(&qj)
 	test.AssertNotError(t, err, "")
-	test.AssertNotEquals(t, qj.Id.String(), "job_6740b44e-13b9-475d-af06-979627e0e0d6")
+	test.AssertNotEquals(t, qj.ID.String(), "job_6740b44e-13b9-475d-af06-979627e0e0d6")
 }
 
 func TestReplayQueuedJobFails(t *testing.T) {
 	defer db.TearDown(t)
 	qj := factory.CreateQueuedJob(t, factory.EmptyData)
 	w := httptest.NewRecorder()
-	req, _ := http.NewRequest("POST", fmt.Sprintf("/v1/jobs/echo/%s/replay", qj.Id.String()), nil)
+	req, _ := http.NewRequest("POST", fmt.Sprintf("/v1/jobs/echo/%s/replay", qj.ID.String()), nil)
 	req.SetBasicAuth("test", testPassword)
 	server.DefaultServer.ServeHTTP(w, req)
 	test.AssertEquals(t, w.Code, 400)
@@ -198,7 +198,7 @@ func Test202SuccessfulEnqueue(t *testing.T) {
 	var j models.QueuedJob
 	err := json.NewDecoder(w.Body).Decode(&j)
 	test.AssertNotError(t, err, "")
-	test.AssertEquals(t, j.Id.String(), "job_6740b44e-13b9-475d-af06-979627e0e0d6")
+	test.AssertEquals(t, j.ID.String(), "job_6740b44e-13b9-475d-af06-979627e0e0d6")
 	test.AssertEquals(t, j.Attempts, uint8(7))
 	test.AssertEquals(t, j.Status, models.StatusQueued)
 	test.AssertEquals(t, j.Name, "echo")
@@ -254,7 +254,7 @@ func Test202DuplicateEnqueue(t *testing.T) {
 	var j models.QueuedJob
 	err := json.NewDecoder(w.Body).Decode(&j)
 	test.AssertNotError(t, err, "")
-	test.AssertEquals(t, j.Id.String(), "job_6740b44e-13b9-475d-af06-979627e0e0d6")
+	test.AssertEquals(t, j.ID.String(), "job_6740b44e-13b9-475d-af06-979627e0e0d6")
 }
 
 func Test404JobNotFound(t *testing.T) {

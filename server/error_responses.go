@@ -14,7 +14,7 @@ import (
 func new405(r *http.Request) *rest.Error {
 	return &rest.Error{
 		Title:      "Method not allowed",
-		Id:         "method_not_allowed",
+		ID:         "method_not_allowed",
 		Instance:   r.URL.Path,
 		StatusCode: 405,
 	}
@@ -23,7 +23,7 @@ func new405(r *http.Request) *rest.Error {
 func new404(r *http.Request) *rest.Error {
 	return &rest.Error{
 		Title:      "Resource not found",
-		Id:         "not_found",
+		ID:         "not_found",
 		Instance:   r.URL.Path,
 		StatusCode: 404,
 	}
@@ -32,7 +32,7 @@ func new404(r *http.Request) *rest.Error {
 func new403(r *http.Request) *rest.Error {
 	return &rest.Error{
 		Title:      "Username or password are invalid. Please double check your credentials",
-		Id:         "forbidden",
+		ID:         "forbidden",
 		Instance:   r.URL.Path,
 		StatusCode: 403,
 	}
@@ -41,7 +41,7 @@ func new403(r *http.Request) *rest.Error {
 func insecure403(r *http.Request) *rest.Error {
 	return &rest.Error{
 		Title:      "Server not available over HTTP",
-		Id:         "insecure_request",
+		ID:         "insecure_request",
 		Detail:     "For your security, please use an encrypted connection",
 		Instance:   r.URL.Path,
 		StatusCode: 403,
@@ -51,7 +51,7 @@ func insecure403(r *http.Request) *rest.Error {
 func new401(r *http.Request) *rest.Error {
 	return &rest.Error{
 		Title:      "Unauthorized. Please include your API credentials",
-		Id:         "unauthorized",
+		ID:         "unauthorized",
 		Instance:   r.URL.Path,
 		StatusCode: 401,
 	}
@@ -63,7 +63,7 @@ func createEmptyErr(field string, path string) *rest.Error {
 	return &rest.Error{
 		Title:    fmt.Sprintf("Missing required field: %s", field),
 		Detail:   fmt.Sprintf("Please include a %s in the request body", field),
-		Id:       "missing_parameter",
+		ID:       "missing_parameter",
 		Instance: path,
 	}
 }
@@ -71,7 +71,7 @@ func createEmptyErr(field string, path string) *rest.Error {
 func createPositiveIntErr(field string, path string) *rest.Error {
 	return &rest.Error{
 		Title:    fmt.Sprintf("%s must be set to a number greater than zero", field),
-		Id:       "invalid_parameter",
+		ID:       "invalid_parameter",
 		Instance: path,
 	}
 }
@@ -100,7 +100,7 @@ func forbidden(w http.ResponseWriter, err *rest.Error) {
 
 var serverError = rest.Error{
 	StatusCode: http.StatusInternalServerError,
-	Id:         "server_error",
+	ID:         "server_error",
 	Title:      "Unexpected server error. Please try again",
 }
 

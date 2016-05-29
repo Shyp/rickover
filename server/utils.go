@@ -17,14 +17,14 @@ func getId(w http.ResponseWriter, r *http.Request, idStr string) (types.PrefixUU
 	id, err := types.NewPrefixUUID(idStr)
 	if err != nil {
 		badRequest(w, r, &rest.Error{
-			Id:    "invalid_uuid",
+			ID:    "invalid_uuid",
 			Title: strings.Replace(err.Error(), "types: ", "", 1),
 		})
 		return id, true
 	}
 	if id.Prefix != queued_jobs.Prefix {
 		badRequest(w, r, &rest.Error{
-			Id:    "invalid_prefix",
+			ID:    "invalid_prefix",
 			Title: fmt.Sprintf("Please use %s for the uuid prefix, not %s", queued_jobs.Prefix, id.Prefix),
 		})
 		return id, true

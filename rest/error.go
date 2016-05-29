@@ -11,7 +11,7 @@ type Error struct {
 	Title string `json:"title"`
 
 	// Id of this error message ("forbidden", "invalid_parameter", etc)
-	Id string `json:"id"`
+	ID string `json:"id"`
 
 	// More information about what went wrong.
 	Detail string `json:"detail,omitempty"`

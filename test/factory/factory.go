@@ -107,9 +107,9 @@ func CreateRandomQueuedJob(t *testing.T, data json.RawMessage) *models.QueuedJob
 
 func CreateArchivedJob(t *testing.T, data json.RawMessage, status models.JobStatus) *models.ArchivedJob {
 	qj := createJobAndQueuedJob(t, SampleJob, data, false)
-	aj, err := archived_jobs.Create(qj.Id, qj.Name, models.StatusSucceeded, qj.Attempts)
+	aj, err := archived_jobs.Create(qj.ID, qj.Name, models.StatusSucceeded, qj.Attempts)
 	test.AssertNotError(t, err, "")
-	err = queued_jobs.DeleteRetry(qj.Id, 3)
+	err = queued_jobs.DeleteRetry(qj.ID, 3)
 	test.AssertNotError(t, err, "")
 	return aj
 }

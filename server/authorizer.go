@@ -56,19 +56,19 @@ func (c *SharedSecretAuthorizer) Authorize(userId string, token string) *rest.Er
 		if userId == "" {
 			return &rest.Error{
 				Title: "No authentication provided",
-				Id:    "missing_authentication",
+				ID:    "missing_authentication",
 			}
 		} else {
 			return &rest.Error{
 				Title: "Username or password are invalid. Please double check your credentials",
-				Id:    "forbidden",
+				ID:    "forbidden",
 			}
 		}
 	}
 	if subtle.ConstantTimeCompare([]byte(token), []byte(serverPass)) != 1 {
 		return &rest.Error{
 			Title: fmt.Sprintf("Incorrect password for user %s", userId),
-			Id:    "incorrect_password",
+			ID:    "incorrect_password",
 		}
 	}
 	return nil
@@ -85,7 +85,7 @@ func (f *forbiddenAuthorizer) Authorize(userId string, token string) *rest.Error
 	f.Token = token
 	return &rest.Error{
 		Title: "Invalid Access Token",
-		Id:    "forbidden_api",
+		ID:    "forbidden_api",
 	}
 }
 
@@ -101,16 +101,16 @@ func (u *UnsafeBypassAuthorizer) Authorize(userId string, token string) *rest.Er
 func handleAuthorizeError(w http.ResponseWriter, r *http.Request, err error) {
 	switch err := err.(type) {
 	case *rest.Error:
-		if err.Id == "forbidden_api" || err.Id == "missing_authentication" {
+		if err.ID == "forbidden_api" || err.ID == "missing_authentication" {
 			err.StatusCode = 401
 			authenticate(w, err)
 			return
 		}
-		if err.Id == "incorrect_password" || err.Id == "forbidden" {
+		if err.ID == "incorrect_password" || err.ID == "forbidden" {
 			forbidden(w, err)
 			return
 		}
-		if err.StatusCode == http.StatusInternalServerError || err.Id == "server_error" {
+		if err.StatusCode == http.StatusInternalServerError || err.ID == "server_error" {
 			writeServerError(w, r, err)
 			return
 		}

@@ -54,7 +54,7 @@ func TestXForwardedProtoDisallowed(t *testing.T) {
 			var e rest.Error
 			err := json.Unmarshal(w.Body.Bytes(), &e)
 			test.AssertNotError(t, err, "")
-			test.AssertEquals(t, e.Id, "insecure_request")
+			test.AssertEquals(t, e.ID, "insecure_request")
 		}
 	}
 }

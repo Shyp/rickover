@@ -22,14 +22,14 @@ func ArchiveStuckJobs(olderThan time.Duration) error {
 		return err
 	}
 	for _, qj := range jobs {
-		err = HandleStatusCallback(qj.Id, qj.Name, models.StatusFailed, qj.Attempts)
+		err = HandleStatusCallback(qj.ID, qj.Name, models.StatusFailed, qj.Attempts)
 		if err == nil {
-			log.Printf("Found stuck job %s and marked it as failed", qj.Id.String())
+			log.Printf("Found stuck job %s and marked it as failed", qj.ID.String())
 		} else {
 			// We don't want to return an error here since there may easily be
 			// race/idempotence errors with a stuck job watcher. If it errors
 			// we'll grab it with the next cron.
-			log.Printf("Found stuck job %s but could not process it: %s", qj.Id.String(), err.Error())
+			log.Printf("Found stuck job %s but could not process it: %s", qj.ID.String(), err.Error())
 		}
 	}
 	return nil
