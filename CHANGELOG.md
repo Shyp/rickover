@@ -4,6 +4,10 @@
 https://github.com/Shyp/bump_version/commit/2dc60a73949ae5e42468d475a90e76619dbc67a6.
 Adds regression tests to ensure this doesn't happen again.
 
+- Support marking failed jobs as un-retryable; pass `{"status": "failed",
+"retryable": false}` in your status callback endpoint to immediately archive
+the job.
+
 ## Version 0.33
 
 - All uses of `Id` have been renamed to `ID`, per the Go Code Review Comments

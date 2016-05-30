@@ -10,8 +10,8 @@ The goals/features of this project are:
   desirable
 - Good memory performance - with 300 dequeuers, the server and worker take
   about 30MB in total.
-- No long-running database queries
-- All queue actions exposed over HTTP.
+- No long-running database queries, or open transactions
+- All queue actions have an HTTP API.
 - All enqueue/dequeue actions are idempotent - it's OK if any part of the
   system gets restarted
 
@@ -23,11 +23,12 @@ The only supported content type for uploads and responses is JSON.
 
 #### Create a job type
 
-Before you can start enqueueing and dequeueing work, you need to create a
-job type. Define a job type with a name, a delivery strategy (idempotent ==
-"at_least_once", not idempotent == "at_most_once"), and a concurrency - the
-maximum number of jobs that can be in flight at once. If the job is idempotent,
-you can add "attempts" - the number of times to try to dequeue the job.
+To start enqueueing and dequeueing work, you need to create a job type. Define
+a job type with a name, a delivery strategy (idempotent == `"at_least_once"`,
+not idempotent == `"at_most_once"`), and a concurrency - the maximum number
+of jobs that can be in flight at once. If the job is idempotent, you can add
+"attempts" - the number of times to try to send the job to the downstream
+server before giving up.
 
 ```
 POST /v1/jobs
@@ -61,7 +62,8 @@ PUT /v1/jobs/invoice-shipments/job_282227eb-3c76-4ef7-af7e-25dff933077f
 ```
 
 This inserts a record into the `queued_jobs` table and returns a
-[models.QueuedJob][queued-job]. The client can retry in the event of failure.
+[models.QueuedJob][queued-job]. The client can and should retry in the event of
+failure.
 
 You can put any valid JSON in the `data` field; we'll send this to the
 downstream worker.
@@ -69,12 +71,15 @@ downstream worker.
 There are two special fields - `run_after` indicates the earliest possible
 time this job can run (or `null` to indicate it can run now), and `expires_at`
 indicates the latest possible time this job can run. If a job is dequeued after
-the `expires_at` date, we insert it immediately into the `archived_jobs` table
-with status `expired`.
+the `expires_at` date, we don't send it to the downstream worker, and insert it
+immediately into the `archived_jobs` table with status `expired`.
 
 [queued-job]: https://godoc.org/github.com/Shyp/rickover/models#QueuedJob
 
 #### Record a job's success or failure
+
+Once the downstream worker has completed work, record the status of the job by
+making a POST request to the same URI.
 
 ```
 POST /v1/jobs/invoice-shipments/job_123 HTTP/1.1
@@ -84,19 +89,26 @@ POST /v1/jobs/invoice-shipments/job_123 HTTP/1.1
 }
 ```
 
-Note you must include the attempt number in your callback; we use this for
-idempotency, and to avoid stale writes.
+Note you must include the attempt number in your callback; we use this
+for idempotency, and to avoid stale writes. Valid values for `status` are
+"succeeded" or "failed". If a failed job is retryable, we'll insert the job
+back into the `queued_jobs` table with a `run_after` date set a small amount
+of time in the future. If a failed job is retryable but should not be retried,
+include `"retryable": false` in the body of the POST request, which will
+immediately archive the job.
 
 #### Replay a job
 
-This is handy if the initial job failed, or you want to re-run something on an
-adhoc basis.
+This is handy if the initial job failed, the downstream server had an outage,
+or you want to re-run something on an adhoc basis.
 
 ```
 POST /v1/jobs/invoice-shipments/job_123/replay HTTP/1.1
 ```
 
-Will create a new UUID and enqueue the job to be run immediately.
+Will create a new UUID and enqueue the job to be run immediately. If you
+attempt to replay an expired job, the new job will be immediately archived with
+a status of "expired".
 
 #### Get information about a job
 
@@ -107,9 +119,10 @@ GET /v1/jobs/invoice-shipments/job_123 HTTP/1.1
 This looks in the queued_jobs table first, then the archived_jobs table, and
 returns whatever it finds. Note the fields in these tables don't match up 100%.
 
+
 ### Server Authentication
 
-By default the server uses a shared secret for authentication. Call
+By default, the server uses an in-memory secret for authentication. Call
 [`server.AddUser`][add-user] to add an authenticated user and password for the
 [DefaultServer][default-server].
 
@@ -138,8 +151,8 @@ http.ListenAndServe(":9090", handler)
 
 ## Processing jobs
 
-When you get a job, you can do whatever you want with it - your dequeuer just
-needs to satisfy the [Worker][worker] interface.
+When you get a job from the database, you can do whatever you want with it -
+your dequeuer just needs to satisfy the [Worker][worker] interface.
 
 ```go
 // A Worker does some work with a QueuedJob.
@@ -177,7 +190,7 @@ The [downstream.Client][downstream-client] will make a POST request to
 
 ```
 POST /v1/jobs/invoice-shipment/job_123 HTTP/1.1
-Host: worker.shyp.com
+Host: downstream.shyp.com
 Content-Type: application/json
 Accept: application/json
 {
@@ -247,7 +260,7 @@ go services.WatchStuckJobs(1*time.Minute, stuckJobTimeout)
 
 ## Database Table Layout
 
-There are three tables.
+There are three tables, plus one for keeping track of ran migrations.
 
 - `jobs` - Contains information about a job's name, retry strategy, desired
   concurrency.
@@ -272,7 +285,7 @@ Referenced by:
 ```
 
 - `queued_jobs` - The "hot" table, this contains rows that are scheduled to be
-  dequeued. Should be small so queries are fast.
+dequeued. Should be small, so queries are fast.
 
 ```
                    Table "public.queued_jobs"
@@ -382,7 +395,12 @@ goose --env=test status
 ```
 
 You should also be able to use goose to run migrations in your production
-environment.
+environment. Set the DATABASE_URL environment variable to a Postgres string,
+then use the `cluster` environment, for example
+
+```
+DATABASE_URL=$(heroku config:get DATABASE_URL --app myapp) goose --env=cluster up
+```
 
 [goose]: https://bitbucket.org/liamstask/goose
 
