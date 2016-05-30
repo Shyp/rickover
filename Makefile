@@ -36,7 +36,7 @@ serve:
 dequeue:
 	@DATABASE_URL=$(DATABASE_URL) go run commands/dequeuer/main.go
 
-release:
+release: race-test
 	go get github.com/Shyp/bump_version
 	bump_version minor config/config.go
 	git push origin master
