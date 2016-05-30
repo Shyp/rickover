@@ -63,7 +63,7 @@ func TestFailedUnretryableArchivesJob(t *testing.T) {
 	aj, err := archived_jobs.Get(qj.ID)
 	test.AssertNotError(t, err, "finding archived job")
 	test.AssertEquals(t, aj.Status, models.StatusFailed)
-	test.AssertEquals(t, aj.Attempts, 22)
+	test.AssertEquals(t, aj.Attempts, qj.Attempts-1)
 }
 
 var validRequest = server.CreateJobRequest{
