@@ -24,7 +24,6 @@ import (
 func TestExpiredJobNotEnqueued(t *testing.T) {
 	t.Parallel()
 	test.SetUp(t)
-	defer test.TearDown(t)
 
 	c1 := make(chan bool, 1)
 	s := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

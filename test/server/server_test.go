@@ -42,7 +42,6 @@ func TestGoodRequestReturns200(t *testing.T) {
 
 func TestFailedUnretryableArchivesJob(t *testing.T) {
 	t.Parallel()
-	defer test.TearDown(t)
 	qj := factory.CreateQJ(t)
 	w := httptest.NewRecorder()
 	jsr := &server.JobStatusRequest{
@@ -286,7 +285,6 @@ func Test202DuplicateEnqueue(t *testing.T) {
 
 func Test404JobNotFound(t *testing.T) {
 	test.SetUp(t)
-	defer test.TearDown(t)
 	t.Parallel()
 	w := httptest.NewRecorder()
 	req, _ := http.NewRequest("GET", "/v1/jobs/unknown", nil)

@@ -14,6 +14,7 @@ import (
 )
 
 func TestWorkerShutsDown(t *testing.T) {
+	test.SetUp(t)
 	t.Parallel()
 	poolname := factory.RandomId("pool")
 	pool := dequeuer.NewPool(poolname.String())
@@ -42,7 +43,6 @@ func TestWorkerShutsDown(t *testing.T) {
 // 4. Ensure that the correct request is made to the server
 func TestWorkerMakesCorrectRequest(t *testing.T) {
 	t.Parallel()
-	defer test.TearDown(t)
 	qj := factory.CreateQJ(t)
 
 	c1 := make(chan bool, 1)
@@ -90,7 +90,6 @@ func TestWorkerMakesCorrectRequest(t *testing.T) {
 // 4. Ensure that only one request is made to the server
 func TestWorkerMakesExactlyOneRequest(t *testing.T) {
 	t.Parallel()
-	defer test.TearDown(t)
 	qj := factory.CreateQJ(t)
 
 	c1 := make(chan bool, 1)

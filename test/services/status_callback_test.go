@@ -66,7 +66,6 @@ func TestStatusCallbackFailedAtLeastOnceUpdatesQueuedRecord(t *testing.T) {
 
 func TestStatusCallbackFailedNotRetryableArchivesRecord(t *testing.T) {
 	t.Parallel()
-	defer test.TearDown(t)
 	qj := factory.CreateQJ(t)
 	err := services.HandleStatusCallback(qj.ID, qj.Name, models.StatusFailed, qj.Attempts, false)
 	test.AssertNotError(t, err, "inserting archived record")

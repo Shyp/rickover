@@ -18,17 +18,24 @@ func SetUp(t *testing.T) {
 	}
 }
 
-func TearDown(t *testing.T) {
+// TruncateTables deletes all records from the database.
+func TruncateTables() error {
 	getTableDelete := func(table string) string {
 		return fmt.Sprintf("DELETE FROM %[1]s", table)
 	}
+	_, err := db.Conn.Exec(fmt.Sprintf("BEGIN; %s;\n%s;\n%s; COMMIT",
+		getTableDelete("archived_jobs"),
+		getTableDelete("queued_jobs"),
+		getTableDelete("jobs"),
+	))
+	return err
+}
+
+// TearDown deletes all records from the database, and marks the test as failed
+// if this was unsuccessful.
+func TearDown(t *testing.T) {
 	if db.Connected() {
-		_, err := db.Conn.Exec(fmt.Sprintf("BEGIN; %s;\n%s;\n%s; COMMIT",
-			getTableDelete("archived_jobs"),
-			getTableDelete("queued_jobs"),
-			getTableDelete("jobs"),
-		))
-		if err != nil {
+		if err := TruncateTables(); err != nil {
 			t.Fatal(err)
 		}
 	}

@@ -23,7 +23,6 @@ var sampleJob = models.Job{
 func TestCreateJobReturnsJob(t *testing.T) {
 	t.Parallel()
 	qj := factory.CreateQJ(t)
-	defer test.TearDown(t)
 	aj, err := archived_jobs.Create(qj.ID, qj.Name, models.StatusSucceeded, qj.Attempts)
 	test.AssertNotError(t, err, "")
 	test.AssertEquals(t, aj.ID.String(), qj.ID.String())
@@ -81,7 +80,6 @@ func TestCreateJobStoresJob(t *testing.T) {
 func TestCreateArchivedJobWithNoQueuedReturnsErrNoRows(t *testing.T) {
 	t.Parallel()
 	test.SetUp(t)
-	defer test.TearDown(t)
 	_, err := archived_jobs.Create(factory.JobId, "echo", models.StatusSucceeded, 7)
 	test.AssertEquals(t, err, queued_jobs.ErrNotFound)
 }

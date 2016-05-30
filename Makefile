@@ -24,11 +24,18 @@ docs:
 	(sleep 1; open http://localhost:6060/pkg/github.com/Shyp/rickover) &
 	godoc -http=:6060
 
-test: 
+testonly: 
 	@DATABASE_URL=$(TEST_DATABASE_URL) go test -p 1 ./... -timeout 2s
 
-race-test:
+race-testonly:
 	@DATABASE_URL=$(TEST_DATABASE_URL) go test -p 1 -race -v ./... -timeout 2s
+
+truncate-test:
+	@DATABASE_URL=$(TEST_DATABASE_URL) rickover-truncate-tables
+
+race-test: race-testonly truncate-test
+
+test: testonly truncate-test
 
 serve:
 	@DATABASE_URL=$(DATABASE_URL) go run commands/server/main.go
