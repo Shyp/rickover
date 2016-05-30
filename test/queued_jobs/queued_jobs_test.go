@@ -15,7 +15,6 @@ import (
 	"github.com/Shyp/rickover/models/queued_jobs"
 	"github.com/Shyp/rickover/services"
 	"github.com/Shyp/rickover/test"
-	"github.com/Shyp/rickover/test/db"
 	"github.com/Shyp/rickover/test/factory"
 )
 
@@ -29,7 +28,7 @@ var sampleJob = models.Job{
 }
 
 func TestEnqueue(t *testing.T) {
-	defer db.TearDown(t)
+	defer test.TearDown(t)
 	qj := factory.CreateQueuedJob(t, factory.EmptyData)
 	test.AssertEquals(t, qj.ID.String(), "job_6740b44e-13b9-475d-af06-979627e0e0d6")
 	test.AssertEquals(t, qj.Name, "echo")
@@ -47,8 +46,8 @@ func TestEnqueue(t *testing.T) {
 }
 
 func TestEnqueueNoData(t *testing.T) {
-	db.SetUp(t)
-	defer db.TearDown(t)
+	test.SetUp(t)
+	defer test.TearDown(t)
 	_, err := jobs.Create(sampleJob)
 	test.AssertNotError(t, err, "")
 
@@ -66,8 +65,8 @@ func TestEnqueueNoData(t *testing.T) {
 }
 
 func TestEnqueueJobExists(t *testing.T) {
-	db.SetUp(t)
-	defer db.TearDown(t)
+	test.SetUp(t)
+	defer test.TearDown(t)
 	_, err := jobs.Create(sampleJob)
 	test.AssertNotError(t, err, "")
 
@@ -92,7 +91,7 @@ func TestEnqueueJobExists(t *testing.T) {
 
 func TestEnqueueUnknownJobTypeErrNoRows(t *testing.T) {
 	t.Parallel()
-	db.SetUp(t)
+	test.SetUp(t)
 
 	expiresAt := types.NullTime{Valid: false}
 	runAfter := time.Now().UTC()
@@ -103,7 +102,7 @@ func TestEnqueueUnknownJobTypeErrNoRows(t *testing.T) {
 
 func TestEnqueueWithExistingArchivedJobFails(t *testing.T) {
 	qj := factory.CreateQueuedJob(t, factory.EmptyData)
-	defer db.TearDown(t)
+	defer test.TearDown(t)
 	err := services.HandleStatusCallback(qj.ID, qj.Name, models.StatusSucceeded, qj.Attempts)
 	test.AssertNotError(t, err, "")
 	expiresAt := types.NullTime{Valid: false}
@@ -115,14 +114,14 @@ func TestEnqueueWithExistingArchivedJobFails(t *testing.T) {
 
 func TestNonexistentReturnsErrNoRows(t *testing.T) {
 	t.Parallel()
-	db.SetUp(t)
+	test.SetUp(t)
 	id, _ := types.NewPrefixUUID("job_a9173b65-7714-42b4-85f2-8336f6d12180")
 	_, err := queued_jobs.Get(id)
 	test.AssertEquals(t, err, queued_jobs.ErrNotFound)
 }
 
 func TestGetQueuedJob(t *testing.T) {
-	defer db.TearDown(t)
+	defer test.TearDown(t)
 	qj := factory.CreateQueuedJob(t, factory.EmptyData)
 	gotQj, err := queued_jobs.Get(qj.ID)
 	test.AssertNotError(t, err, "")
@@ -130,7 +129,7 @@ func TestGetQueuedJob(t *testing.T) {
 }
 
 func TestDeleteQueuedJob(t *testing.T) {
-	defer db.TearDown(t)
+	defer test.TearDown(t)
 	qj := factory.CreateQueuedJob(t, factory.EmptyData)
 	err := queued_jobs.Delete(qj.ID)
 	test.AssertNotError(t, err, "")
@@ -138,15 +137,15 @@ func TestDeleteQueuedJob(t *testing.T) {
 
 func TestDeleteNonexistentJobReturnsErrNoRows(t *testing.T) {
 	t.Parallel()
-	db.SetUp(t)
-	defer db.TearDown(t)
+	test.SetUp(t)
+	defer test.TearDown(t)
 	err := queued_jobs.Delete(factory.RandomId("job_"))
 	test.AssertEquals(t, err, queued_jobs.ErrNotFound)
 }
 
 func TestDataRoundtrip(t *testing.T) {
-	db.SetUp(t)
-	defer db.TearDown(t)
+	test.SetUp(t)
+	defer test.TearDown(t)
 	_, err := jobs.Create(sampleJob)
 	test.AssertNotError(t, err, "")
 
@@ -197,7 +196,7 @@ func TestDataRoundtrip(t *testing.T) {
 }
 
 func TestAcquireReturnsCorrectValues(t *testing.T) {
-	defer db.TearDown(t)
+	defer test.TearDown(t)
 	factory.CreateQueuedJob(t, factory.EmptyData)
 
 	gotQj, err := queued_jobs.Acquire(sampleJob.Name)
@@ -208,7 +207,7 @@ func TestAcquireReturnsCorrectValues(t *testing.T) {
 
 func TestAcquireTwoThreads(t *testing.T) {
 	var wg sync.WaitGroup
-	defer db.TearDown(t)
+	defer test.TearDown(t)
 	factory.CreateQueuedJob(t, factory.EmptyData)
 
 	wg.Add(2)
@@ -229,8 +228,8 @@ func TestAcquireTwoThreads(t *testing.T) {
 }
 
 func TestAcquireDoesntGetFutureJob(t *testing.T) {
-	db.SetUp(t)
-	defer db.TearDown(t)
+	test.SetUp(t)
+	defer test.TearDown(t)
 
 	_, err := jobs.Create(sampleJob)
 	test.AssertNotError(t, err, "")
@@ -244,8 +243,8 @@ func TestAcquireDoesntGetFutureJob(t *testing.T) {
 }
 
 func TestAcquireDoesntGetInProgressJob(t *testing.T) {
-	db.SetUp(t)
-	defer db.TearDown(t)
+	test.SetUp(t)
+	defer test.TearDown(t)
 
 	_, err := jobs.Create(sampleJob)
 	test.AssertNotError(t, err, "")
@@ -263,7 +262,7 @@ func TestAcquireDoesntGetInProgressJob(t *testing.T) {
 }
 
 func TestDecrementDecrements(t *testing.T) {
-	defer db.TearDown(t)
+	defer test.TearDown(t)
 	qj := factory.CreateQueuedJob(t, factory.EmptyData)
 	qj, err := queued_jobs.Decrement(qj.ID, 7, time.Now().Add(1*time.Minute))
 	test.AssertNotError(t, err, "")
@@ -272,15 +271,15 @@ func TestDecrementDecrements(t *testing.T) {
 }
 
 func TestDecrementErrNoRowsWrongAttempts(t *testing.T) {
-	defer db.TearDown(t)
+	defer test.TearDown(t)
 	qj := factory.CreateQueuedJob(t, factory.EmptyData)
 	_, err := queued_jobs.Decrement(qj.ID, 1, time.Now())
 	test.AssertEquals(t, err, sql.ErrNoRows)
 }
 
 func TestCountAll(t *testing.T) {
-	db.SetUp(t)
-	defer db.TearDown(t)
+	test.SetUp(t)
+	defer test.TearDown(t)
 	allCount, readyCount, err := queued_jobs.CountReadyAndAll()
 	test.AssertNotError(t, err, "")
 	test.AssertEquals(t, allCount, 0)
@@ -296,7 +295,7 @@ func TestCountAll(t *testing.T) {
 }
 
 func TestCountByStatus(t *testing.T) {
-	defer db.TearDown(t)
+	defer test.TearDown(t)
 	factory.CreateRandomQueuedJob(t, factory.EmptyData)
 	factory.CreateRandomQueuedJob(t, factory.EmptyData)
 	factory.CreateRandomQueuedJob(t, factory.EmptyData)
@@ -309,7 +308,7 @@ func TestCountByStatus(t *testing.T) {
 }
 
 func TestOldInProgress(t *testing.T) {
-	defer db.TearDown(t)
+	defer test.TearDown(t)
 	qj1 := factory.CreateRandomQueuedJob(t, factory.EmptyData)
 	qj2 := factory.CreateRandomQueuedJob(t, factory.EmptyData)
 	_, err := queued_jobs.Acquire(qj1.Name)

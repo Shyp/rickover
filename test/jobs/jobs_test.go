@@ -8,12 +8,11 @@ import (
 	"github.com/Shyp/rickover/models"
 	"github.com/Shyp/rickover/models/jobs"
 	"github.com/Shyp/rickover/test"
-	"github.com/Shyp/rickover/test/db"
 )
 
 func TestCreateMissingFields(t *testing.T) {
 	t.Parallel()
-	db.SetUp(t)
+	test.SetUp(t)
 	job := models.Job{
 		Name: "email-signup",
 	}
@@ -24,7 +23,7 @@ func TestCreateMissingFields(t *testing.T) {
 
 func TestCreateInvalidFields(t *testing.T) {
 	t.Parallel()
-	db.SetUp(t)
+	test.SetUp(t)
 	job := models.Job{
 		Name:             "email-signup",
 		DeliveryStrategy: models.DeliveryStrategy("foo"),
@@ -42,8 +41,8 @@ var sampleJob = models.Job{
 }
 
 func TestCreateReturnsRecord(t *testing.T) {
-	db.SetUp(t)
-	defer db.TearDown(t)
+	test.SetUp(t)
+	defer test.TearDown(t)
 	j, err := jobs.Create(sampleJob)
 	test.AssertNotError(t, err, "")
 	test.AssertEquals(t, j.Name, "email-signup")
@@ -55,8 +54,8 @@ func TestCreateReturnsRecord(t *testing.T) {
 }
 
 func TestGet(t *testing.T) {
-	db.SetUp(t)
-	defer db.TearDown(t)
+	test.SetUp(t)
+	defer test.TearDown(t)
 	_, err := jobs.Create(sampleJob)
 	test.AssertNotError(t, err, "")
 	j, err := jobs.Get("email-signup")

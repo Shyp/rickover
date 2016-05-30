@@ -18,14 +18,13 @@ import (
 	"github.com/Shyp/rickover/rest"
 	"github.com/Shyp/rickover/services"
 	"github.com/Shyp/rickover/test"
-	"github.com/Shyp/rickover/test/db"
 	"github.com/Shyp/rickover/test/factory"
 )
 
 func TestExpiredJobNotEnqueued(t *testing.T) {
 	t.Parallel()
-	db.SetUp(t)
-	defer db.TearDown(t)
+	test.SetUp(t)
+	defer test.TearDown(t)
 
 	c1 := make(chan bool, 1)
 	s := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -61,8 +60,8 @@ func TestExpiredJobNotEnqueued(t *testing.T) {
 // 3. Create a test server that replies with a 503 rest.Error
 // 4. Ensure that the worker retries
 func TestWorkerRetriesJSON503(t *testing.T) {
-	db.SetUp(t)
-	defer db.TearDown(t)
+	test.SetUp(t)
+	defer test.TearDown(t)
 
 	// make the test go faster
 	originalSleepWorker503Factor := services.UnavailableSleepFactor
@@ -117,8 +116,8 @@ func TestWorkerRetriesJSON503(t *testing.T) {
 }
 
 func TestWorkerWaitsConnectTimeout(t *testing.T) {
-	db.SetUp(t)
-	defer db.TearDown(t)
+	test.SetUp(t)
+	defer test.TearDown(t)
 	jp := services.NewJobProcessor("http://10.255.255.1", "password")
 
 	// Okay this is not the world's best design.
@@ -139,8 +138,8 @@ func TestWorkerWaitsConnectTimeout(t *testing.T) {
 
 // this could probably be a simpler test
 func TestWorkerWaitsRequestTimeout(t *testing.T) {
-	db.SetUp(t)
-	defer db.TearDown(t)
+	test.SetUp(t)
+	defer test.TearDown(t)
 	var wg sync.WaitGroup
 	wg.Add(1)
 	s := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -170,8 +169,8 @@ func TestWorkerWaitsRequestTimeout(t *testing.T) {
 }
 
 func TestWorkerDoesNotWaitConnectionFailure(t *testing.T) {
-	db.SetUp(t)
-	defer db.TearDown(t)
+	test.SetUp(t)
+	defer test.TearDown(t)
 	jp := services.NewJobProcessor(
 		"password",
 		// TODO empty port finder

@@ -10,7 +10,6 @@ import (
 
 	"github.com/Shyp/rickover/dequeuer"
 	"github.com/Shyp/rickover/test"
-	"github.com/Shyp/rickover/test/db"
 	"github.com/Shyp/rickover/test/factory"
 )
 
@@ -43,7 +42,7 @@ func TestWorkerShutsDown(t *testing.T) {
 // 4. Ensure that the correct request is made to the server
 func TestWorkerMakesCorrectRequest(t *testing.T) {
 	t.Parallel()
-	defer db.TearDown(t)
+	defer test.TearDown(t)
 	qj := factory.CreateQJ(t)
 
 	c1 := make(chan bool, 1)
@@ -91,7 +90,7 @@ func TestWorkerMakesCorrectRequest(t *testing.T) {
 // 4. Ensure that only one request is made to the server
 func TestWorkerMakesExactlyOneRequest(t *testing.T) {
 	t.Parallel()
-	defer db.TearDown(t)
+	defer test.TearDown(t)
 	qj := factory.CreateQJ(t)
 
 	c1 := make(chan bool, 1)

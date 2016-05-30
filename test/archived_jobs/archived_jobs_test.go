@@ -9,7 +9,6 @@ import (
 	"github.com/Shyp/rickover/models/archived_jobs"
 	"github.com/Shyp/rickover/models/queued_jobs"
 	"github.com/Shyp/rickover/test"
-	"github.com/Shyp/rickover/test/db"
 	"github.com/Shyp/rickover/test/factory"
 )
 
@@ -24,7 +23,7 @@ var sampleJob = models.Job{
 func TestCreateJobReturnsJob(t *testing.T) {
 	t.Parallel()
 	qj := factory.CreateQJ(t)
-	defer db.TearDown(t)
+	defer test.TearDown(t)
 	aj, err := archived_jobs.Create(qj.ID, qj.Name, models.StatusSucceeded, qj.Attempts)
 	test.AssertNotError(t, err, "")
 	test.AssertEquals(t, aj.ID.String(), qj.ID.String())
@@ -42,7 +41,7 @@ func TestCreateJobReturnsJob(t *testing.T) {
 // a uniqueness constraint failure.
 func TestArchivedJobFailsIfJobExists(t *testing.T) {
 	qj := factory.CreateQueuedJob(t, factory.EmptyData)
-	defer db.TearDown(t)
+	defer test.TearDown(t)
 	_, err := archived_jobs.Create(qj.ID, "echo", models.StatusSucceeded, 7)
 	test.AssertNotError(t, err, "")
 	_, err = archived_jobs.Create(qj.ID, "echo", models.StatusSucceeded, 7)
@@ -62,7 +61,7 @@ func TestArchivedJobFailsIfJobExists(t *testing.T) {
 // Test that creating a job stores the data in the database
 func TestCreateJobStoresJob(t *testing.T) {
 	qj := factory.CreateQueuedJob(t, factory.EmptyData)
-	defer db.TearDown(t)
+	defer test.TearDown(t)
 	aj, err := archived_jobs.Create(qj.ID, "echo", models.StatusSucceeded, 7)
 	test.AssertNotError(t, err, "")
 	aj, err = archived_jobs.Get(aj.ID)
@@ -81,8 +80,8 @@ func TestCreateJobStoresJob(t *testing.T) {
 // returns sql.ErrNoRows
 func TestCreateArchivedJobWithNoQueuedReturnsErrNoRows(t *testing.T) {
 	t.Parallel()
-	db.SetUp(t)
-	defer db.TearDown(t)
+	test.SetUp(t)
+	defer test.TearDown(t)
 	_, err := archived_jobs.Create(factory.JobId, "echo", models.StatusSucceeded, 7)
 	test.AssertEquals(t, err, queued_jobs.ErrNotFound)
 }
@@ -91,7 +90,7 @@ func TestCreateArchivedJobWithNoQueuedReturnsErrNoRows(t *testing.T) {
 // returns sql.ErrNoRows
 func TestCreateArchivedJobWithWrongNameReturnsErrNoRows(t *testing.T) {
 	qj := factory.CreateQueuedJob(t, factory.EmptyData)
-	defer db.TearDown(t)
+	defer test.TearDown(t)
 	_, err := archived_jobs.Create(qj.ID, "wrong-job-name", models.StatusSucceeded, 7)
 	test.AssertEquals(t, err, queued_jobs.ErrNotFound)
 }

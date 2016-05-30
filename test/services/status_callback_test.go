@@ -8,12 +8,11 @@ import (
 	"github.com/Shyp/rickover/models/queued_jobs"
 	"github.com/Shyp/rickover/services"
 	"github.com/Shyp/rickover/test"
-	"github.com/Shyp/rickover/test/db"
 	"github.com/Shyp/rickover/test/factory"
 )
 
 func TestStatusCallbackInsertsArchivedRecordDeletesQueuedRecord(t *testing.T) {
-	defer db.TearDown(t)
+	defer test.TearDown(t)
 	qj := factory.CreateQueuedJob(t, factory.EmptyData)
 	err := services.HandleStatusCallback(qj.ID, "echo", models.StatusSucceeded, 7)
 	test.AssertNotError(t, err, "")
@@ -28,7 +27,7 @@ func TestStatusCallbackInsertsArchivedRecordDeletesQueuedRecord(t *testing.T) {
 }
 
 func TestStatusCallbackFailedInsertsArchivedRecord(t *testing.T) {
-	defer db.TearDown(t)
+	defer test.TearDown(t)
 	qj := factory.CreateQueuedJob(t, factory.EmptyData)
 	err := services.HandleStatusCallback(qj.ID, "echo", models.StatusFailed, 1)
 	test.AssertNotError(t, err, "")
@@ -40,7 +39,7 @@ func TestStatusCallbackFailedInsertsArchivedRecord(t *testing.T) {
 }
 
 func TestStatusCallbackFailedAtMostOnceInsertsArchivedRecord(t *testing.T) {
-	defer db.TearDown(t)
+	defer test.TearDown(t)
 	qj := factory.CreateAtMostOnceJob(t, factory.EmptyData)
 	err := services.HandleStatusCallback(qj.ID, "at-most-once", models.StatusFailed, 7)
 	test.AssertNotError(t, err, "")
@@ -52,7 +51,7 @@ func TestStatusCallbackFailedAtMostOnceInsertsArchivedRecord(t *testing.T) {
 }
 
 func TestStatusCallbackFailedAtLeastOnceUpdatesQueuedRecord(t *testing.T) {
-	defer db.TearDown(t)
+	defer test.TearDown(t)
 	qj := factory.CreateQueuedJob(t, factory.EmptyData)
 	err := services.HandleStatusCallback(qj.ID, "echo", models.StatusFailed, 7)
 	test.AssertNotError(t, err, "")
@@ -68,7 +67,7 @@ func TestStatusCallbackFailedAtLeastOnceUpdatesQueuedRecord(t *testing.T) {
 // This test returns an error - if the queued job doesn't exist, we can't
 // create an archived job.
 func TestStatusCallbackFailedAtMostOnceArchivedRecordExists(t *testing.T) {
-	defer db.TearDown(t)
+	defer test.TearDown(t)
 	aj := factory.CreateArchivedJob(t, factory.EmptyData, models.StatusFailed)
 	err := services.HandleStatusCallback(aj.ID, aj.Name, models.StatusFailed, 1)
 	test.AssertEquals(t, err, queued_jobs.ErrNotFound)

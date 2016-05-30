@@ -16,7 +16,6 @@ import (
 	"github.com/Shyp/rickover/models/queued_jobs"
 	"github.com/Shyp/rickover/services"
 	"github.com/Shyp/rickover/test"
-	"github.com/Shyp/rickover/test/db"
 )
 
 var EmptyData = json.RawMessage([]byte("{}"))
@@ -65,7 +64,7 @@ func RandomId(prefix string) types.PrefixUUID {
 }
 
 func CreateJob(t *testing.T, j models.Job) models.Job {
-	db.SetUp(t)
+	test.SetUp(t)
 	job, err := jobs.Create(j)
 	test.AssertNotError(t, err, "")
 	return *job
@@ -79,7 +78,7 @@ func CreateQueuedJob(t *testing.T, data json.RawMessage) *models.QueuedJob {
 
 // CreateQJ creates a job with a random name, and a random UUID.
 func CreateQJ(t *testing.T) *models.QueuedJob {
-	db.SetUp(t)
+	test.SetUp(t)
 	jobname := RandomId("jobtype")
 	job, err := jobs.Create(models.Job{
 		Name:             jobname.String(),
@@ -120,7 +119,7 @@ func CreateAtMostOnceJob(t *testing.T, data json.RawMessage) *models.QueuedJob {
 }
 
 func createJobAndQueuedJob(t *testing.T, j models.Job, data json.RawMessage, randomId bool) *models.QueuedJob {
-	db.SetUp(t)
+	test.SetUp(t)
 	_, err := jobs.Create(j)
 	if err != nil {
 		switch dberr := err.(type) {

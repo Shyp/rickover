@@ -14,7 +14,6 @@ import (
 	"github.com/Shyp/rickover/models/jobs"
 	"github.com/Shyp/rickover/server"
 	"github.com/Shyp/rickover/test"
-	"github.com/Shyp/rickover/test/db"
 	"github.com/Shyp/rickover/test/factory"
 )
 
@@ -23,7 +22,7 @@ var u = &server.UnsafeBypassAuthorizer{}
 var testPassword = "XmTGoDTRyVd8HHiuzFtPzF8N&or7ETPaPVvWuR;d"
 
 func TestGoodRequestReturns200(t *testing.T) {
-	defer db.TearDown(t)
+	defer test.TearDown(t)
 	factory.CreateQueuedJob(t, factory.EmptyData)
 	w := httptest.NewRecorder()
 	a := uint8(3)
@@ -47,8 +46,8 @@ var validRequest = server.CreateJobRequest{
 }
 
 func TestCreateJobReturnsJob(t *testing.T) {
-	db.SetUp(t)
-	defer db.TearDown(t)
+	test.SetUp(t)
+	defer test.TearDown(t)
 	w := httptest.NewRecorder()
 	b := new(bytes.Buffer)
 	json.NewEncoder(b).Encode(validRequest)
@@ -69,8 +68,8 @@ func TestCreateJobReturnsJob(t *testing.T) {
 }
 
 func TestSuccessWritesDBRecord(t *testing.T) {
-	db.SetUp(t)
-	defer db.TearDown(t)
+	test.SetUp(t)
+	defer test.TearDown(t)
 	w := httptest.NewRecorder()
 	b := new(bytes.Buffer)
 	json.NewEncoder(b).Encode(validRequest)
@@ -92,7 +91,7 @@ func TestSuccessWritesDBRecord(t *testing.T) {
 }
 
 func TestRetrieveJob(t *testing.T) {
-	defer db.TearDown(t)
+	defer test.TearDown(t)
 	factory.CreateQueuedJob(t, factory.EmptyData)
 	w := httptest.NewRecorder()
 	req, _ := http.NewRequest("GET", "/v1/jobs/echo/job_6740b44e-13b9-475d-af06-979627e0e0d6", nil)
@@ -108,7 +107,7 @@ func TestRetrieveJob(t *testing.T) {
 }
 
 func TestRetrieveJobNoName(t *testing.T) {
-	defer db.TearDown(t)
+	defer test.TearDown(t)
 	factory.CreateQueuedJob(t, factory.EmptyData)
 	w := httptest.NewRecorder()
 	server.DefaultAuthorizer.AddUser("test", testPassword)
@@ -125,7 +124,7 @@ func TestRetrieveJobNoName(t *testing.T) {
 }
 
 func TestRetrieveArchivedJob(t *testing.T) {
-	defer db.TearDown(t)
+	defer test.TearDown(t)
 	factory.CreateArchivedJob(t, factory.EmptyData, models.StatusSucceeded)
 	w := httptest.NewRecorder()
 	req, _ := http.NewRequest("GET", "/v1/jobs/echo/job_6740b44e-13b9-475d-af06-979627e0e0d6", nil)
@@ -141,7 +140,7 @@ func TestRetrieveArchivedJob(t *testing.T) {
 }
 
 func TestReplayJob(t *testing.T) {
-	defer db.TearDown(t)
+	defer test.TearDown(t)
 	factory.CreateArchivedJob(t, factory.EmptyData, models.StatusSucceeded)
 	w := httptest.NewRecorder()
 	req, _ := http.NewRequest("POST", "/v1/jobs/echo/job_6740b44e-13b9-475d-af06-979627e0e0d6/replay", nil)
@@ -155,7 +154,7 @@ func TestReplayJob(t *testing.T) {
 }
 
 func TestReplayJobWithNoName(t *testing.T) {
-	defer db.TearDown(t)
+	defer test.TearDown(t)
 	factory.CreateArchivedJob(t, factory.EmptyData, models.StatusSucceeded)
 	w := httptest.NewRecorder()
 	req, _ := http.NewRequest("POST", "/v1/jobs/job_6740b44e-13b9-475d-af06-979627e0e0d6/replay", nil)
@@ -169,7 +168,7 @@ func TestReplayJobWithNoName(t *testing.T) {
 }
 
 func TestReplayQueuedJobFails(t *testing.T) {
-	defer db.TearDown(t)
+	defer test.TearDown(t)
 	qj := factory.CreateQueuedJob(t, factory.EmptyData)
 	w := httptest.NewRecorder()
 	req, _ := http.NewRequest("POST", fmt.Sprintf("/v1/jobs/echo/%s/replay", qj.ID.String()), nil)
@@ -179,7 +178,7 @@ func TestReplayQueuedJobFails(t *testing.T) {
 }
 
 func Test202SuccessfulEnqueue(t *testing.T) {
-	defer db.TearDown(t)
+	defer test.TearDown(t)
 	_ = factory.CreateJob(t, factory.SampleJob)
 
 	expiry := time.Now().UTC().Add(5 * time.Minute)
@@ -218,7 +217,7 @@ func Test202SuccessfulEnqueue(t *testing.T) {
 }
 
 func Test202RandomId(t *testing.T) {
-	defer db.TearDown(t)
+	defer test.TearDown(t)
 	_ = factory.CreateJob(t, factory.SampleJob)
 
 	w := httptest.NewRecorder()
@@ -234,7 +233,7 @@ func Test202RandomId(t *testing.T) {
 }
 
 func Test202DuplicateEnqueue(t *testing.T) {
-	defer db.TearDown(t)
+	defer test.TearDown(t)
 	_ = factory.CreateJob(t, factory.SampleJob)
 
 	w := httptest.NewRecorder()
@@ -258,8 +257,8 @@ func Test202DuplicateEnqueue(t *testing.T) {
 }
 
 func Test404JobNotFound(t *testing.T) {
-	db.SetUp(t)
-	defer db.TearDown(t)
+	test.SetUp(t)
+	defer test.TearDown(t)
 	t.Parallel()
 	w := httptest.NewRecorder()
 	req, _ := http.NewRequest("GET", "/v1/jobs/unknown", nil)
@@ -276,8 +275,8 @@ var sampleJob = models.Job{
 }
 
 func Test200JobFound(t *testing.T) {
-	db.SetUp(t)
-	defer db.TearDown(t)
+	test.SetUp(t)
+	defer test.TearDown(t)
 	_, err := jobs.Create(sampleJob)
 	test.AssertNotError(t, err, "")
 	w := httptest.NewRecorder()
@@ -295,8 +294,8 @@ var validAtMostOnceRequest = server.CreateJobRequest{
 }
 
 func TestCreateJobAtMostOnceSuccess(t *testing.T) {
-	db.SetUp(t)
-	defer db.TearDown(t)
+	test.SetUp(t)
+	defer test.TearDown(t)
 	w := httptest.NewRecorder()
 	b := new(bytes.Buffer)
 	json.NewEncoder(b).Encode(validAtMostOnceRequest)
