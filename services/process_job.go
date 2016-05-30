@@ -77,7 +77,7 @@ func (jp *JobProcessor) DoWork(qj *models.QueuedJob) error {
 			// requests until the new server is ready, and we see a timeout.
 			return waitForJob(qj, jp.Timeout)
 		} else {
-			return HandleStatusCallback(qj.ID, qj.Name, models.StatusFailed, qj.Attempts)
+			return HandleStatusCallback(qj.ID, qj.Name, models.StatusFailed, qj.Attempts, true)
 		}
 	}
 	return waitForJob(qj, jp.Timeout)
@@ -157,7 +157,7 @@ func waitForJob(qj *models.QueuedJob, failTimeout time.Duration) error {
 		case <-timeoutChan:
 			go metrics.Increment(fmt.Sprintf("wait_for_job.%s.timeout", name))
 			log.Printf("5 minutes elapsed, marking %s (type %s) as failed", idStr, name)
-			err := HandleStatusCallback(qj.ID, name, models.StatusFailed, currentAttemptCount)
+			err := HandleStatusCallback(qj.ID, name, models.StatusFailed, currentAttemptCount, true)
 			go metrics.Increment(fmt.Sprintf("wait_for_job.%s.failed", name))
 			log.Printf("job %s (type %s) timed out after %v", idStr, name, time.Since(start))
 			if err == sql.ErrNoRows {

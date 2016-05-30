@@ -28,7 +28,7 @@ import (
 // already exists, the queued job no longer exists by the time you attempt to
 // delete it, the number of attempts for the queued job don't match up with the
 // passed in value (slow)
-func HandleStatusCallback(id types.PrefixUUID, name string, status models.JobStatus, attempt uint8) error {
+func HandleStatusCallback(id types.PrefixUUID, name string, status models.JobStatus, attempt uint8, retryable bool) error {
 	if status == models.StatusSucceeded {
 		err := createAndDelete(id, name, models.StatusSucceeded, attempt)
 		if err != nil {
@@ -40,7 +40,7 @@ func HandleStatusCallback(id types.PrefixUUID, name string, status models.JobSta
 		}
 		return err
 	} else if status == models.StatusFailed {
-		err := handleFailedCallback(id, name, attempt)
+		err := handleFailedCallback(id, name, attempt, retryable)
 		if err != nil {
 			go metrics.Increment("archived_job.create.failed.error")
 		} else {
@@ -88,9 +88,9 @@ func getRunAfter(totalAttempts, remainingAttempts uint8) time.Time {
 	return time.Now().UTC().Add(time.Duration(math.Pow(2, float64(backoff))) * time.Second)
 }
 
-func handleFailedCallback(id types.PrefixUUID, name string, attempt uint8) error {
+func handleFailedCallback(id types.PrefixUUID, name string, attempt uint8, retryable bool) error {
 	remainingAttempts := attempt - 1
-	if remainingAttempts == 0 {
+	if retryable == false || remainingAttempts == 0 {
 		return createAndDelete(id, name, models.StatusFailed, remainingAttempts)
 	}
 	job, err := jobs.GetRetry(name, 3)

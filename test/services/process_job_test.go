@@ -105,7 +105,7 @@ func TestWorkerRetriesJSON503(t *testing.T) {
 			test.AssertNotError(t, err, "")
 
 			// Cheating, hit the internal success callback.
-			callbackErr := services.HandleStatusCallback(qj.ID, "echo", models.StatusSucceeded, uint8(5))
+			callbackErr := services.HandleStatusCallback(qj.ID, "echo", models.StatusSucceeded, uint8(5), true)
 			test.AssertNotError(t, callbackErr, "")
 		}
 	}))
@@ -126,7 +126,7 @@ func TestWorkerWaitsConnectTimeout(t *testing.T) {
 
 	qj := factory.CreateQueuedJob(t, factory.EmptyData)
 	go func() {
-		err := services.HandleStatusCallback(qj.ID, qj.Name, models.StatusSucceeded, qj.Attempts)
+		err := services.HandleStatusCallback(qj.ID, qj.Name, models.StatusSucceeded, qj.Attempts, true)
 		test.AssertNotError(t, err, "")
 	}()
 
@@ -156,7 +156,7 @@ func TestWorkerWaitsRequestTimeout(t *testing.T) {
 
 	qj := factory.CreateQueuedJob(t, factory.EmptyData)
 	go func() {
-		err := services.HandleStatusCallback(qj.ID, qj.Name, models.StatusSucceeded, qj.Attempts)
+		err := services.HandleStatusCallback(qj.ID, qj.Name, models.StatusSucceeded, qj.Attempts, true)
 		test.AssertNotError(t, err, "")
 	}()
 

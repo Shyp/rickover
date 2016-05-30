@@ -11,7 +11,9 @@ import (
 
 	"github.com/Shyp/rickover/Godeps/_workspace/src/github.com/Shyp/go-types"
 	"github.com/Shyp/rickover/models"
+	"github.com/Shyp/rickover/models/archived_jobs"
 	"github.com/Shyp/rickover/models/jobs"
+	"github.com/Shyp/rickover/models/queued_jobs"
 	"github.com/Shyp/rickover/server"
 	"github.com/Shyp/rickover/test"
 	"github.com/Shyp/rickover/test/factory"
@@ -36,6 +38,32 @@ func TestGoodRequestReturns200(t *testing.T) {
 	req.SetBasicAuth("foo", "bar")
 	server.Get(u).ServeHTTP(w, req)
 	test.AssertEquals(t, w.Code, http.StatusOK)
+}
+
+func TestFailedUnretryableArchivesJob(t *testing.T) {
+	t.Parallel()
+	defer test.TearDown(t)
+	qj := factory.CreateQJ(t)
+	w := httptest.NewRecorder()
+	jsr := &server.JobStatusRequest{
+		Status:    "failed",
+		Retryable: func() *bool { b := false; return &b }(),
+		Attempt:   &qj.Attempts,
+	}
+	b := new(bytes.Buffer)
+	json.NewEncoder(b).Encode(jsr)
+	path := fmt.Sprintf("/v1/jobs/%s/%s", qj.Name, qj.ID.String())
+	req, _ := http.NewRequest("POST", path, b)
+	req.SetBasicAuth("foo", "bar")
+	server.Get(u).ServeHTTP(w, req)
+	test.AssertEquals(t, w.Code, 200)
+
+	_, err := queued_jobs.Get(qj.ID)
+	test.AssertEquals(t, err, queued_jobs.ErrNotFound)
+	aj, err := archived_jobs.Get(qj.ID)
+	test.AssertNotError(t, err, "finding archived job")
+	test.AssertEquals(t, aj.Status, models.StatusFailed)
+	test.AssertEquals(t, aj.Attempts, 22)
 }
 
 var validRequest = server.CreateJobRequest{
