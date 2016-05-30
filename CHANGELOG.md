@@ -1,12 +1,16 @@
-## Version 0.34
+## Version 0.35
 
-- The 0.33 git tag doesn't compile due to the error fixed here:
-https://github.com/Shyp/bump_version/commit/2dc60a73949ae5e42468d475a90e76619dbc67a6.
-Adds regression tests to ensure this doesn't happen again.
+- Fixes an error in a test committed shortly before version 0.34.
+
+## Version 0.34
 
 - Support marking failed jobs as un-retryable; pass `{"status": "failed",
 "retryable": false}` in your status callback endpoint to immediately archive
 the job.
+
+- The 0.33 git tag doesn't compile due to the error fixed here:
+https://github.com/Shyp/bump_version/commit/2dc60a73949ae5e42468d475a90e76619dbc67a6.
+Adds regression tests to ensure this doesn't happen again.
 
 ## Version 0.33
 
