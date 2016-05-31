@@ -1,3 +1,14 @@
+## Version 0.37
+
+Fixes a crashing error in dequeuer.CreatePools (and adds tests so it can't
+happen again)
+
+## Version 0.36
+
+The `job_` prefix is now retrieved as part of the database query instead of
+being attached in the model. You'll need to update `go-types` to version 0.13
+at the latest.
+
 ## Version 0.35
 
 - Fixes an error in a test committed shortly before version 0.34.
