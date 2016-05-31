@@ -56,7 +56,7 @@ func CreatePools(w Worker, maxInitialJitter time.Duration) (Pools, error) {
 				innerwg.Add(1)
 				go func() {
 					time.Sleep(time.Duration(rand.Float64()) * maxInitialJitter)
-					err = p.AddDequeuer(w)
+					err := p.AddDequeuer(w)
 					if err != nil {
 						// XXX return err via channel
 						log.Print(err)
