@@ -170,7 +170,6 @@ func Enqueue(id types.PrefixUUID, name string, runAfter time.Time, expiresAt typ
 		}
 		return nil, dberror.GetError(err)
 	}
-	qj.ID.Prefix = Prefix
 	qj.Data = json.RawMessage(bt)
 	return qj, err
 }
@@ -190,7 +189,6 @@ func Get(id types.PrefixUUID) (*models.QueuedJob, error) {
 		}
 		return nil, dberror.GetError(err)
 	}
-	qj.ID.Prefix = Prefix
 	qj.Data = json.RawMessage(bt)
 	return qj, nil
 }
@@ -275,7 +273,6 @@ func Acquire(name string) (*models.QueuedJob, error) {
 	if err != nil {
 		return nil, err
 	}
-	qj.ID.Prefix = Prefix
 	qj.Data = json.RawMessage(bt)
 	return qj, nil
 }
@@ -295,7 +292,6 @@ func Decrement(id types.PrefixUUID, attempts uint8, runAfter time.Time) (*models
 		err = dberror.GetError(err)
 		return nil, err
 	}
-	qj.ID.Prefix = Prefix
 	qj.Data = json.RawMessage(bt)
 	return qj, nil
 }
@@ -317,7 +313,6 @@ func GetOldInProgressJobs(olderThan time.Time) ([]*models.QueuedJob, error) {
 		if err != nil {
 			return jobs, err
 		}
-		qj.ID.Prefix = Prefix
 		qj.Data = json.RawMessage(bt)
 		jobs = append(jobs, qj)
 	}
@@ -368,7 +363,7 @@ func insertFields() string {
 }
 
 func fields() string {
-	return `id,
+	return fmt.Sprintf(`'%s' || id,
 	name,
 	attempts,
 	run_after,
@@ -376,7 +371,7 @@ func fields() string {
 	status,
 	data,
 	created_at,
-	updated_at`
+	updated_at`, Prefix)
 }
 
 func args(qj *models.QueuedJob, byteptr *[]byte) []interface{} {

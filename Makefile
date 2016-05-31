@@ -19,6 +19,9 @@ lint:
 build:
 	go build ./...
 
+install:
+	go install ./...
+
 docs:
 	go get golang.org/x/tools/cmd/godoc
 	(sleep 1; open http://localhost:6060/pkg/github.com/Shyp/rickover) &
@@ -35,7 +38,7 @@ truncate-test:
 
 race-test: race-testonly truncate-test
 
-test: testonly truncate-test
+test: install testonly truncate-test
 
 serve:
 	@DATABASE_URL=$(DATABASE_URL) go run commands/server/main.go

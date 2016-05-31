@@ -1,7 +1,7 @@
 {
 	"ImportPath": "github.com/Shyp/rickover",
 	"GoVersion": "go1.5",
-	"GodepVersion": "v66",
+	"GodepVersion": "v72",
 	"Packages": [
 		"./..."
 	],
@@ -23,8 +23,8 @@
 		},
 		{
 			"ImportPath": "github.com/Shyp/go-types",
-			"Comment": "0.12",
-			"Rev": "5a37cfe73168c34d863946a8b404d442faf49611"
+			"Comment": "0.13",
+			"Rev": "d3a92d5d02647ebf45fe2c28cccf4b640544c7a6"
 		},
 		{
 			"ImportPath": "github.com/gorilla/handlers",

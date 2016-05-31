@@ -17,13 +17,20 @@
 	If we had to write this value to the database as a string it would take up
 	43 bytes. Instead we use a UUID type and strip the prefix before saving it.
 
-	The converse is Value() only returns the UUID; you have to attach the prefix
-	in your model function.
+	The converse, Value(), only returns the UUID part by default, since this
+	is the only thing the database knows about. You can also attach the prefix
+	manually in your SQL, like so:
+
+		SELECT 'job_' || id, created_at FROM jobs;
+
+	This will get parsed as part of the Scan(), and then you don't need to
+	do anything. Alternatively, you can attach the prefix in your model,
+	immediately after the query.
 
 		func Get(id types.PrefixUUID) *User {
 			var uid types.PrefixUUID
 			var email string
-			db.Conn.QueryRow("SELECT * FROM USERS WHERE id = $1").Scan(&uid, &email)
+			db.Conn.QueryRow("SELECT * FROM users WHERE id = $1").Scan(&uid, &email)
 			uid.Prefix = "usr"
 			return &User{
 				ID: uid,

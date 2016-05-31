@@ -1,13 +1,20 @@
 .PHONY: install build test
 
 install:
+	go get ./...
 	go install ./...
 
 build:
 	go build ./...
 
+lint:
+	go vet ./...
+
 test:
 	go test ./...
+
+race-test:
+	go test -race -v ./...
 
 release:
 	go get github.com/Shyp/bump_version

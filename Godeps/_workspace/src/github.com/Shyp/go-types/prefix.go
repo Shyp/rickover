@@ -15,7 +15,7 @@ type PrefixUUID struct {
 	UUID   *uuid.UUID
 }
 
-func (u *PrefixUUID) String() string {
+func (u PrefixUUID) String() string {
 	return u.Prefix + u.UUID.String()
 }
 
@@ -82,17 +82,17 @@ func (pu *PrefixUUID) Scan(value interface{}) error {
 	if !ok {
 		return fmt.Errorf("types: can't scan value %v into a PrefixUUID", value)
 	}
-	var u *uuid.UUID
 	var err error
-	if len(bits) == 36 {
-		u, err = uuid.ParseHex(string(bits))
+	if len(bits) >= 36 {
+		*pu, err = NewPrefixUUID(string(bits))
 	} else {
+		var u *uuid.UUID
 		u, err = uuid.Parse(bits)
+		pu.UUID = u
 	}
 	if err != nil {
 		return err
 	}
-	pu.UUID = u
 	return nil
 }
 
@@ -101,6 +101,6 @@ func (pu PrefixUUID) Value() (driver.Value, error) {
 	// In theory we should be able to send 16 raw bytes to the database
 	// and have it encoded as a UUID. However, this requires enabling
 	// binary_parameters=yes on the connection string. Instead of that, just
-	// pass a string to the database.
+	// pass a string to the database, which is easy to handle.
 	return pu.UUID.String(), nil
 }
