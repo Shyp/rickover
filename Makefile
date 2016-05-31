@@ -8,7 +8,7 @@ DATABASE_URL = 'postgres://rickover@localhost:5432/rickover?sslmode=disable&time
 TEST_DATABASE_URL = 'postgres://rickover@localhost:5432/rickover_test?sslmode=disable&timezone=UTC'
 endif
 
-test-install:
+test-install: 
 	-createuser rickover --superuser --createrole --createdb --inherit
 	-createdb rickover --owner=rickover
 	-createdb rickover_test --owner=rickover
@@ -36,7 +36,7 @@ race-testonly:
 truncate-test:
 	@DATABASE_URL=$(TEST_DATABASE_URL) rickover-truncate-tables
 
-race-test: race-testonly truncate-test
+race-test: install race-testonly truncate-test
 
 test: install testonly truncate-test
 
