@@ -58,6 +58,7 @@ func Test401UnknownUser(t *testing.T) {
 }
 
 func Test401UnknownPassword(t *testing.T) {
+	t.Parallel()
 	w := httptest.NewRecorder()
 	ejr := &EnqueueJobRequest{
 		Data: empty,
