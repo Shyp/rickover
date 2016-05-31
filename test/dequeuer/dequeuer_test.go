@@ -14,8 +14,8 @@ import (
 )
 
 func TestWorkerShutsDown(t *testing.T) {
-	test.SetUp(t)
 	t.Parallel()
+	test.SetUp(t)
 	poolname := factory.RandomId("pool")
 	pool := dequeuer.NewPool(poolname.String())
 	for i := 0; i < 3; i++ {
@@ -35,6 +35,31 @@ func TestWorkerShutsDown(t *testing.T) {
 			t.Fatalf("pool did not shut down in 300ms")
 		}
 	}
+}
+
+func TestCreatePools(t *testing.T) {
+	test.SetUp(t)
+	// in case the other parallel tests didn't clean up after themselves
+	test.AssertNotError(t, test.TruncateTables(), "truncate tables")
+	defer test.TearDown(t)
+	qj := factory.CreateQJ(t)
+	factory.CreateQJ(t)
+	proc := factory.Processor("http://example.com")
+	pools, err := dequeuer.CreatePools(proc, 0)
+	test.AssertNotError(t, err, "CreatePools")
+	test.AssertEquals(t, len(pools), 2)
+	foundPool := false
+	for _, pool := range pools {
+		if pool.Name == qj.Name {
+			foundPool = true
+			test.AssertEquals(t, len(pool.Dequeuers), 3)
+			for i, dq := range pool.Dequeuers {
+				test.AssertEquals(t, dq.ID, i+1)
+				test.AssertEquals(t, dq.W, proc)
+			}
+		}
+	}
+	test.Assert(t, foundPool, "Didn't create a pool for the job type")
 }
 
 // 1. Create a job type

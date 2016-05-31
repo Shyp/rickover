@@ -48,6 +48,7 @@ func CreatePools(w Worker, maxInitialJitter time.Duration) (Pools, error) {
 	pools := make([]*Pool, len(jobs))
 	var wg sync.WaitGroup
 	for i, job := range jobs {
+		wg.Add(1)
 		go func(i int, job *models.Job) {
 			p := NewPool(job.Name)
 			var innerwg sync.WaitGroup
