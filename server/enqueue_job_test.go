@@ -28,7 +28,7 @@ func Test401NoCredentials(t *testing.T) {
 	b := new(bytes.Buffer)
 	json.NewEncoder(b).Encode(ejr)
 	req, _ := http.NewRequest("PUT", "/v1/jobs/echo/job_6740b44e-13b9-475d-af06-979627e0e0d6", b)
-	DefaultServer.ServeHTTP(w, req)
+	Get(u).ServeHTTP(w, req)
 	test.AssertEquals(t, w.Code, http.StatusUnauthorized)
 	var e rest.Error
 	err := json.Unmarshal(w.Body.Bytes(), &e)
@@ -129,10 +129,9 @@ func Test400InvalidUUID(t *testing.T) {
 	}
 	b := new(bytes.Buffer)
 	json.NewEncoder(b).Encode(ejr)
-	DefaultAuthorizer.AddUser("test", "password")
 	req, _ := http.NewRequest("PUT", "/v1/jobs/echo/job_123", b)
 	req.SetBasicAuth("test", "password")
-	DefaultServer.ServeHTTP(w, req)
+	Get(u).ServeHTTP(w, req)
 	test.AssertEquals(t, w.Code, http.StatusBadRequest)
 	var e rest.Error
 	err := json.Unmarshal(w.Body.Bytes(), &e)
@@ -153,7 +152,7 @@ func Test404WrongPrefix(t *testing.T) {
 	json.NewEncoder(b).Encode(ejr)
 	req, _ := http.NewRequest("PUT", "/v1/jobs/echo/usr_6740b44e-13b9-475d-af06-979627e0e0d6", b)
 	req.SetBasicAuth("test", "password")
-	DefaultServer.ServeHTTP(w, req)
+	Get(u).ServeHTTP(w, req)
 	test.AssertEquals(t, w.Code, http.StatusNotFound)
 }
 
@@ -174,7 +173,7 @@ func Test413TooLargeJSON(t *testing.T) {
 	test.Assert(t, len(b.Bytes()) > 100*1024, fmt.Sprintf("%d", len(b.Bytes())))
 	req, _ := http.NewRequest("PUT", "/v1/jobs/echo/job_6740b44e-13b9-475d-af06-979627e0e0d6", b)
 	req.SetBasicAuth("test", "password")
-	DefaultServer.ServeHTTP(w, req)
+	Get(u).ServeHTTP(w, req)
 	test.AssertEquals(t, w.Code, http.StatusRequestEntityTooLarge)
 	var e rest.Error
 	err := json.Unmarshal(w.Body.Bytes(), &e)
