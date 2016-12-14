@@ -130,6 +130,7 @@ func (jp *JobProcessor) requestRetry(qj *models.QueuedJob) error {
 					if isTimeout(err) {
 						metrics.Increment("dequeue.post_job.timeout")
 					} else {
+						log.Printf("Unknown error making POST request to downstream server: %#v", err)
 						metrics.Increment("dequeue.post_job.error_unknown")
 					}
 				}(err)
