@@ -23,6 +23,10 @@ var u = &server.UnsafeBypassAuthorizer{}
 
 var testPassword = "XmTGoDTRyVd8HHiuzFtPzF8N&or7ETPaPVvWuR;d"
 
+func init() {
+	server.DefaultAuthorizer.AddUser("test", testPassword)
+}
+
 func TestGoodRequestReturns200(t *testing.T) {
 	defer test.TearDown(t)
 	factory.CreateQueuedJob(t, factory.EmptyData)
@@ -137,7 +141,6 @@ func TestRetrieveJobNoName(t *testing.T) {
 	defer test.TearDown(t)
 	factory.CreateQueuedJob(t, factory.EmptyData)
 	w := httptest.NewRecorder()
-	server.DefaultAuthorizer.AddUser("test", testPassword)
 	req, _ := http.NewRequest("GET", "/v1/jobs/job_6740b44e-13b9-475d-af06-979627e0e0d6", nil)
 	req.SetBasicAuth("test", testPassword)
 	server.DefaultServer.ServeHTTP(w, req)

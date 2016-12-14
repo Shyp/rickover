@@ -63,7 +63,7 @@ func RandomId(prefix string) types.PrefixUUID {
 	}
 }
 
-func CreateJob(t *testing.T, j models.Job) models.Job {
+func CreateJob(t testing.TB, j models.Job) models.Job {
 	test.SetUp(t)
 	job, err := jobs.Create(j)
 	test.AssertNotError(t, err, "")
@@ -72,12 +72,12 @@ func CreateJob(t *testing.T, j models.Job) models.Job {
 
 // CreateQueuedJob creates a job and a queued job with the given JSON data, and
 // returns the created queued job.
-func CreateQueuedJob(t *testing.T, data json.RawMessage) *models.QueuedJob {
+func CreateQueuedJob(t testing.TB, data json.RawMessage) *models.QueuedJob {
 	return createJobAndQueuedJob(t, SampleJob, data, false)
 }
 
 // CreateQJ creates a job with a random name, and a random UUID.
-func CreateQJ(t *testing.T) *models.QueuedJob {
+func CreateQJ(t testing.TB) *models.QueuedJob {
 	test.SetUp(t)
 	jobname := RandomId("jobtype")
 	job, err := jobs.Create(models.Job{
@@ -118,7 +118,7 @@ func CreateAtMostOnceJob(t *testing.T, data json.RawMessage) *models.QueuedJob {
 	return createJobAndQueuedJob(t, SampleAtMostOnceJob, data, false)
 }
 
-func createJobAndQueuedJob(t *testing.T, j models.Job, data json.RawMessage, randomId bool) *models.QueuedJob {
+func createJobAndQueuedJob(t testing.TB, j models.Job, data json.RawMessage, randomId bool) *models.QueuedJob {
 	test.SetUp(t)
 	_, err := jobs.Create(j)
 	if err != nil {

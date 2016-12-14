@@ -1,11 +1,13 @@
 language: go
+go_import_path: github.com/Shyp/rickover
 
 go:
   - 1.5
   - 1.6
+  - 1.7
   - tip
 
-script: make lint race-test
+script: make lint race-test bench
 
 before_script:
   - make test-install
@@ -13,7 +15,9 @@ before_script:
   - goose --env=travis up
 
 addons:
-  postgresql: "9.4"
+  postgresql: "9.5"
 
 services:
   - postgresql
+
+dist: trusty

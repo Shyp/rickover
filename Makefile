@@ -1,5 +1,7 @@
 .PHONY: install test race-test
 
+SHELL = /bin/bash
+
 ifdef DATABASE_URL
 DATABASE_URL = $(DATABASE_URL)
 TEST_DATABASE_URL = $(DATABASE_URL)
@@ -7,6 +9,8 @@ else
 DATABASE_URL = 'postgres://rickover@localhost:5432/rickover?sslmode=disable&timezone=UTC'
 TEST_DATABASE_URL = 'postgres://rickover@localhost:5432/rickover_test?sslmode=disable&timezone=UTC'
 endif
+
+BENCHSTAT := $(shell command -v benchstat)
 
 test-install: 
 	-createuser rickover --superuser --createrole --createdb --inherit
@@ -55,3 +59,9 @@ release: race-test
 migrate:
 	goose --env=development up
 	goose --env=test up
+
+bench:
+ifndef BENCHSTAT
+	go get -u rsc.io/benchstat
+endif
+	tmp=$$(mktemp); go list ./... | grep -v vendor | xargs go test -benchtime=2s -bench=. -run='^$$' > "$$tmp" 2>&1 && benchstat "$$tmp"

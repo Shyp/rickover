@@ -9,7 +9,7 @@ import (
 	"github.com/Shyp/rickover/setup"
 )
 
-func SetUp(t *testing.T) {
+func SetUp(t testing.TB) {
 	if os.Getenv("DATABASE_URL") == "" {
 		os.Setenv("DATABASE_URL", "postgres://rickover@localhost:5432/rickover_test?sslmode=disable&timezone=UTC")
 	}
@@ -33,7 +33,7 @@ func TruncateTables() error {
 
 // TearDown deletes all records from the database, and marks the test as failed
 // if this was unsuccessful.
-func TearDown(t *testing.T) {
+func TearDown(t testing.TB) {
 	if db.Connected() {
 		if err := TruncateTables(); err != nil {
 			t.Fatal(err)
