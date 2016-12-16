@@ -198,7 +198,7 @@ Accept: application/json
         "shipmentId": "shp_123"
     },
     "id": "job_123",
-    "attempt": 3
+    "attempts": 3
 }
 ```
 
