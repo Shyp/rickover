@@ -32,42 +32,42 @@ func caller() string {
 }
 
 // Assert a boolean
-func Assert(t *testing.T, result bool, message string) {
+func Assert(t testing.TB, result bool, message string) {
 	if !result {
 		t.Fatalf("%s %s", caller(), message)
 	}
 }
 
 // AssertNotNil checks an object to be non-nil
-func AssertNotNil(t *testing.T, obj interface{}, message string) {
+func AssertNotNil(t testing.TB, obj interface{}, message string) {
 	if obj == nil {
 		t.Fatalf("%s %s", caller(), message)
 	}
 }
 
 // AssertNotError checks that err is nil
-func AssertNotError(t *testing.T, err error, message string) {
+func AssertNotError(t testing.TB, err error, message string) {
 	if err != nil {
 		t.Fatalf("%s %s: %s", caller(), message, err)
 	}
 }
 
 // AssertError checks that err is non-nil
-func AssertError(t *testing.T, err error, message string) {
+func AssertError(t testing.TB, err error, message string) {
 	if err == nil {
 		t.Fatalf("%s %s: expected error but received none", caller(), message)
 	}
 }
 
 // AssertEquals uses the equality operator (==) to measure one and two
-func AssertEquals(t *testing.T, one interface{}, two interface{}) {
+func AssertEquals(t testing.TB, one interface{}, two interface{}) {
 	if one != two {
 		t.Fatalf("%s [%v] != [%v]", caller(), one, two)
 	}
 }
 
 // AssertDeepEquals uses the reflect.DeepEqual method to measure one and two
-func AssertDeepEquals(t *testing.T, one interface{}, two interface{}) {
+func AssertDeepEquals(t testing.TB, one interface{}, two interface{}) {
 	if !reflect.DeepEqual(one, two) {
 		t.Fatalf("%s [%+v] !(deep)= [%+v]", caller(), one, two)
 	}
@@ -75,7 +75,7 @@ func AssertDeepEquals(t *testing.T, one interface{}, two interface{}) {
 
 // AssertMarshaledEquals marshals one and two to JSON, and then uses
 // the equality operator to measure them
-func AssertMarshaledEquals(t *testing.T, one interface{}, two interface{}) {
+func AssertMarshaledEquals(t testing.TB, one interface{}, two interface{}) {
 	oneJSON, err := json.Marshal(one)
 	AssertNotError(t, err, "Could not marshal 1st argument")
 	twoJSON, err := json.Marshal(two)
@@ -88,14 +88,14 @@ func AssertMarshaledEquals(t *testing.T, one interface{}, two interface{}) {
 
 // AssertNotEquals uses the equality operator to measure that one and two
 // are different
-func AssertNotEquals(t *testing.T, one interface{}, two interface{}) {
+func AssertNotEquals(t testing.TB, one interface{}, two interface{}) {
 	if one == two {
 		t.Fatalf("%s [%v] == [%v]", caller(), one, two)
 	}
 }
 
 // AssertByteEquals uses bytes.Equal to measure one and two for equality.
-func AssertByteEquals(t *testing.T, one []byte, two []byte) {
+func AssertByteEquals(t testing.TB, one []byte, two []byte) {
 	if !bytes.Equal(one, two) {
 		t.Fatalf("%s Byte [%s] != [%s]",
 			caller(),
@@ -105,7 +105,7 @@ func AssertByteEquals(t *testing.T, one []byte, two []byte) {
 }
 
 // AssertIntEquals uses the equality operator to measure one and two.
-func AssertIntEquals(t *testing.T, one int, two int) {
+func AssertIntEquals(t testing.TB, one int, two int) {
 	if one != two {
 		t.Fatalf("%s Int [%d] != [%d]", caller(), one, two)
 	}
@@ -113,34 +113,34 @@ func AssertIntEquals(t *testing.T, one int, two int) {
 
 // AssertBigIntEquals uses the big.Int.cmp() method to measure whether
 // one and two are equal
-func AssertBigIntEquals(t *testing.T, one *big.Int, two *big.Int) {
+func AssertBigIntEquals(t testing.TB, one *big.Int, two *big.Int) {
 	if one.Cmp(two) != 0 {
 		t.Fatalf("%s Int [%d] != [%d]", caller(), one, two)
 	}
 }
 
 // AssertContains determines whether needle can be found in haystack
-func AssertContains(t *testing.T, haystack string, needle string) {
+func AssertContains(t testing.TB, haystack string, needle string) {
 	if !strings.Contains(haystack, needle) {
 		t.Fatalf("%s String [%s] does not contain [%s]", caller(), haystack, needle)
 	}
 }
 
 // AssertNotContains determines if needle is not found in haystack
-func AssertNotContains(t *testing.T, haystack string, needle string) {
+func AssertNotContains(t testing.TB, haystack string, needle string) {
 	if strings.Contains(haystack, needle) {
 		t.Fatalf("%s String [%s] contains [%s]", caller(), haystack, needle)
 	}
 }
 
 // AssertSeverity determines if a string matches the Severity formatting
-func AssertSeverity(t *testing.T, data string, severity int) {
+func AssertSeverity(t testing.TB, data string, severity int) {
 	expected := fmt.Sprintf("\"severity\":%d", severity)
 	AssertContains(t, data, expected)
 }
 
 // AssertBetween determines if a is between b and c
-func AssertBetween(t *testing.T, a, b, c int64) {
+func AssertBetween(t testing.TB, a, b, c int64) {
 	if a < b || a > c {
 		t.Fatalf("%d is not between %d and %d", a, b, c)
 	}

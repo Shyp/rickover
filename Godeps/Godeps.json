@@ -1,7 +1,7 @@
 {
 	"ImportPath": "github.com/Shyp/rickover",
 	"GoVersion": "go1.5",
-	"GodepVersion": "v72",
+	"GodepVersion": "v75",
 	"Packages": [
 		"./..."
 	],
