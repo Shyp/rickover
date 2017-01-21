@@ -1,12 +1,12 @@
-// Dequeue jobs.
+// Command dequeuer dequeues jobs and sends them to a downstream server.
 package main
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"os"
 	"os/signal"
-	"sync"
 	"syscall"
 	"time"
 
@@ -16,6 +16,7 @@ import (
 	"github.com/Shyp/rickover/models/db"
 	"github.com/Shyp/rickover/services"
 	"github.com/Shyp/rickover/setup"
+	"golang.org/x/sync/errgroup"
 )
 
 func checkError(err error) {
@@ -69,19 +70,23 @@ func main() {
 	signal.Notify(sigterm, syscall.SIGTERM)
 	sig := <-sigterm
 	fmt.Printf("Caught signal %v, shutting down...\n", sig)
-	var wg sync.WaitGroup
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	g, _ := errgroup.WithContext(ctx)
 	for _, p := range pools {
 		if p != nil {
-			wg.Add(1)
-			go func(p *dequeuer.Pool) {
+			p := p
+			g.Go(func() error {
 				err = p.Shutdown()
 				if err != nil {
 					log.Printf("Error shutting down pool: %s\n", err.Error())
 				}
-				wg.Done()
-			}(p)
+				return err
+			})
 		}
 	}
-	wg.Wait()
+	if err := g.Wait(); err != nil {
+		log.Fatal(err)
+	}
 	fmt.Println("All pools shut down. Quitting.")
 }

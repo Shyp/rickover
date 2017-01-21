@@ -1,4 +1,4 @@
-// The dequeuer retrieves jobs from the database and does some work.
+// Package dequeuer retrieves jobs from the database and does some work.
 package dequeuer
 
 import (
@@ -14,6 +14,7 @@ import (
 	"github.com/Shyp/rickover/models"
 	"github.com/Shyp/rickover/models/jobs"
 	"github.com/Shyp/rickover/models/queued_jobs"
+	"golang.org/x/sync/errgroup"
 )
 
 func init() {
@@ -46,31 +47,36 @@ func CreatePools(w Worker, maxInitialJitter time.Duration) (Pools, error) {
 	}
 
 	pools := make([]*Pool, len(jobs))
-	var wg sync.WaitGroup
+	var g errgroup.Group
 	for i, job := range jobs {
-		wg.Add(1)
-		go func(i int, job *models.Job) {
-			p := NewPool(job.Name)
-			var innerwg sync.WaitGroup
-			for j := uint8(0); j < job.Concurrency; j++ {
-				innerwg.Add(1)
-				go func() {
+		// Copy these so we don't have a concurrency/race problem when the
+		// counter iterates
+		i := i
+		name := job.Name
+		concurrency := job.Concurrency
+		g.Go(func() error {
+			p := NewPool(name)
+			var innerg errgroup.Group
+			for j := uint8(0); j < concurrency; j++ {
+				innerg.Go(func() error {
 					time.Sleep(time.Duration(rand.Float64()) * maxInitialJitter)
 					err := p.AddDequeuer(w)
 					if err != nil {
-						// XXX return err via channel
 						log.Print(err)
-						return
 					}
-					innerwg.Done()
-				}()
+					return err
+				})
 			}
-			innerwg.Wait()
+			if err := innerg.Wait(); err != nil {
+				return err
+			}
 			pools[i] = p
-			wg.Done()
-		}(i, job)
+			return nil
+		})
 	}
-	wg.Wait()
+	if err := g.Wait(); err != nil {
+		return nil, err
+	}
 	return pools, nil
 }
 
@@ -128,9 +134,7 @@ func (p *Pool) AddDequeuer(w Worker) error {
 	}
 	p.Dequeuers = append(p.Dequeuers, d)
 	p.wg.Add(1)
-	go func(d *Dequeuer) {
-		d.Work(p.Name, &p.wg)
-	}(d)
+	go d.Work(p.Name, &p.wg)
 	return nil
 }
 
