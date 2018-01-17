@@ -11,6 +11,10 @@ go:
 script: make lint race-test bench
 
 before_script:
+  - cat Makefile
+  - pwd
+  - env
+  - make -v
   - make test-install
   - go get -u github.com/kevinburke/goose/cmd/goose
   - goose --env=travis up

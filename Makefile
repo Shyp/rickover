@@ -3,17 +3,17 @@
 SHELL = /bin/bash -x -o pipefail
 
 ifdef DATABASE_URL
-DATABASE_URL := $(DATABASE_URL)
-TEST_DATABASE_URL := $(DATABASE_URL)
+	DATABASE_URL := $(DATABASE_URL)
+	TEST_DATABASE_URL := $(DATABASE_URL)
 else
-DATABASE_URL := 'postgres://rickover@localhost:5432/rickover?sslmode=disable&timezone=UTC'
-TEST_DATABASE_URL := 'postgres://rickover@localhost:5432/rickover_test?sslmode=disable&timezone=UTC'
+	DATABASE_URL := 'postgres://rickover@localhost:5432/rickover?sslmode=disable&timezone=UTC'
+	TEST_DATABASE_URL := 'postgres://rickover@localhost:5432/rickover_test?sslmode=disable&timezone=UTC'
 endif
 
-BENCHSTAT := "$(GOPATH)/bin/benchstat"
-BUMP_VERSION := "$(GOPATH)/bin/bump_version"
-GODOCDOC := "$(GOPATH)/bin/godocdoc"
-GOOSE := "$(GOPATH)/bin/goose"
+BENCHSTAT := $(GOPATH)/bin/benchstat
+BUMP_VERSION := $(GOPATH)/bin/bump_version
+GODOCDOC := $(GOPATH)/bin/godocdoc
+GOOSE := $(GOPATH)/bin/goose
 
 test-install:
 	-createuser rickover --superuser --createrole --createdb --inherit
@@ -30,11 +30,10 @@ install:
 	go install ./...
 
 $(GODOCDOC):
-	echo "$(GOPATH)"
 	go get -u github.com/kevinburke/godocdoc
 
 docs: | $(GODOCDOC)
-	"$(GODOCDOC)"
+	$(GODOCDOC)
 
 testonly:
 	@DATABASE_URL=$(TEST_DATABASE_URL) go test -p 1 ./... -timeout 2s
