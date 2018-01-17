@@ -16,7 +16,7 @@ import (
 func Test404JSONUnknownResource(t *testing.T) {
 	t.Parallel()
 	w := httptest.NewRecorder()
-	req, _ := http.NewRequest("GET", "/foo/unknown", nil)
+	req := httptest.NewRequest("GET", "/foo/unknown", nil)
 	DefaultServer.ServeHTTP(w, req)
 	test.AssertEquals(t, w.Code, http.StatusNotFound)
 	var e rest.Error
@@ -38,13 +38,14 @@ var prototests = []struct {
 
 func TestXForwardedProtoDisallowed(t *testing.T) {
 	t.Parallel()
-	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+	mux := http.NewServeMux()
+	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("hello world"))
 	})
-	h := forbidNonTLSTrafficHandler(http.DefaultServeMux)
+	h := forbidNonTLSTrafficHandler(mux)
 	for _, tt := range prototests {
 		w := httptest.NewRecorder()
-		req, _ := http.NewRequest("GET", "/", nil)
+		req := httptest.NewRequest("GET", "/", nil)
 		req.Header.Set("X-Forwarded-Proto", tt.hval)
 		h.ServeHTTP(w, req)
 		if tt.allowed {
@@ -61,7 +62,7 @@ func TestXForwardedProtoDisallowed(t *testing.T) {
 
 func TestHomepageRendersVersion(t *testing.T) {
 	t.Parallel()
-	req, _ := http.NewRequest("GET", "/", nil)
+	req := httptest.NewRequest("GET", "/", nil)
 	w := httptest.NewRecorder()
 	req.SetBasicAuth("foo", "bar")
 	u := &UnsafeBypassAuthorizer{}
@@ -74,7 +75,7 @@ func TestHomepageRendersVersion(t *testing.T) {
 
 func TestHomepageForbidsUnknownUsers(t *testing.T) {
 	t.Parallel()
-	req, _ := http.NewRequest("GET", "/", nil)
+	req := httptest.NewRequest("GET", "/", nil)
 	w := httptest.NewRecorder()
 	req.SetBasicAuth("Unknown user", "Wrong password")
 	DefaultServer.ServeHTTP(w, req)
@@ -83,7 +84,7 @@ func TestHomepageForbidsUnknownUsers(t *testing.T) {
 
 func TestHomepageDisallowsUnauthedUsers(t *testing.T) {
 	t.Parallel()
-	req, _ := http.NewRequest("GET", "/", nil)
+	req := httptest.NewRequest("GET", "/", nil)
 	w := httptest.NewRecorder()
 	DefaultServer.ServeHTTP(w, req)
 	test.AssertEquals(t, w.Code, 401)
@@ -91,7 +92,7 @@ func TestHomepageDisallowsUnauthedUsers(t *testing.T) {
 
 func TestServerVersionHeader(t *testing.T) {
 	t.Parallel()
-	req, _ := http.NewRequest("GET", "/", nil)
+	req := httptest.NewRequest("GET", "/", nil)
 	w := httptest.NewRecorder()
 	req.SetBasicAuth("foo", "bar")
 	u := &UnsafeBypassAuthorizer{}
@@ -101,7 +102,7 @@ func TestServerVersionHeader(t *testing.T) {
 
 func TestStrictTransportHeader(t *testing.T) {
 	t.Parallel()
-	req, _ := http.NewRequest("GET", "/", nil)
+	req := httptest.NewRequest("GET", "/", nil)
 	w := httptest.NewRecorder()
 	req.SetBasicAuth("foo", "bar")
 	u := &UnsafeBypassAuthorizer{}

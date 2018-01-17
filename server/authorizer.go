@@ -31,7 +31,7 @@ type Authorizer interface {
 // authenticate incoming requests.
 type SharedSecretAuthorizer struct {
 	allowedUsers map[string]string
-	mu           sync.Mutex
+	mu           sync.RWMutex
 }
 
 // NewSharedSecretAuthorizer creates a SharedSecretAuthorizer ready for use.
@@ -51,7 +51,9 @@ func (ssa *SharedSecretAuthorizer) AddUser(userId string, password string) {
 // Authorize returns nil if the userId and token have been added to c, and
 // a rest.Error if they are not allowed to access the API.
 func (c *SharedSecretAuthorizer) Authorize(userId string, token string) *rest.Error {
+	c.mu.RLock()
 	serverPass, ok := c.allowedUsers[userId]
+	c.mu.RUnlock()
 	if !ok {
 		if userId == "" {
 			return &rest.Error{

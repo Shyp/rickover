@@ -2,9 +2,6 @@ language: go
 go_import_path: github.com/Shyp/rickover
 
 go:
-  - 1.6.x
-  - 1.7.x
-  - 1.8.x
   - 1.9.x
   - master
 

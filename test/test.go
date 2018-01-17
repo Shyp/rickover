@@ -10,6 +10,7 @@ import (
 )
 
 func SetUp(t testing.TB) {
+	t.Helper()
 	if os.Getenv("DATABASE_URL") == "" {
 		os.Setenv("DATABASE_URL", "postgres://rickover@localhost:5432/rickover_test?sslmode=disable&timezone=UTC")
 	}
@@ -34,6 +35,7 @@ func TruncateTables() error {
 // TearDown deletes all records from the database, and marks the test as failed
 // if this was unsuccessful.
 func TearDown(t testing.TB) {
+	t.Helper()
 	if db.Connected() {
 		if err := TruncateTables(); err != nil {
 			t.Fatal(err)

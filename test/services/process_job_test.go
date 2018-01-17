@@ -180,7 +180,7 @@ func TestWorkerDoesNotWaitConnectionFailure(t *testing.T) {
 	// Job processor client -> worker client -> generic rest client
 	jp.Client.Client.Client.Timeout = 20 * time.Millisecond
 
-	qj := factory.CreateAtMostOnceJob(t, factory.EmptyData)
+	_, qj := factory.CreateAtMostOnceJob(t, factory.EmptyData)
 	err := jp.DoWork(qj)
 	test.AssertNotError(t, err, "")
 	aj, err := archived_jobs.Get(qj.ID)

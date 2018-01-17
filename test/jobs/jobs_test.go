@@ -50,7 +50,7 @@ func TestCreateReturnsRecord(t *testing.T) {
 	test.AssertEquals(t, j.Attempts, uint8(3))
 	test.AssertEquals(t, j.Concurrency, uint8(1))
 	diff := time.Since(j.CreatedAt)
-	test.Assert(t, diff < 20*time.Millisecond, fmt.Sprintf("too much time: %v", diff))
+	test.Assert(t, diff < 100*time.Millisecond, fmt.Sprintf("CreatedAt should be close to the current time, got %v", diff))
 }
 
 func TestGet(t *testing.T) {

@@ -40,7 +40,7 @@ func TestStatusCallbackFailedInsertsArchivedRecord(t *testing.T) {
 
 func TestStatusCallbackFailedAtMostOnceInsertsArchivedRecord(t *testing.T) {
 	defer test.TearDown(t)
-	qj := factory.CreateAtMostOnceJob(t, factory.EmptyData)
+	_, qj := factory.CreateAtMostOnceJob(t, factory.EmptyData)
 	err := services.HandleStatusCallback(qj.ID, "at-most-once", models.StatusFailed, 7, true)
 	test.AssertNotError(t, err, "")
 	_, err = queued_jobs.Get(qj.ID)

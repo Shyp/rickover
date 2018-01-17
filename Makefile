@@ -41,7 +41,7 @@ testonly:
 	@DATABASE_URL=$(TEST_DATABASE_URL) go list ./... | grep -v vendor | xargs go test -timeout 10s
 
 race-testonly:
-	@DATABASE_URL=$(TEST_DATABASE_URL) go list ./... | grep -v vendor | xargs go test -race -timeout 10s
+	DATABASE_URL=$(TEST_DATABASE_URL) go list ./... | grep -v vendor | xargs go test -v -race -timeout 10s
 
 truncate-test: $(TRUNCATE_TABLES)
 	@DATABASE_URL=$(TEST_DATABASE_URL) $(TRUNCATE_TABLES)

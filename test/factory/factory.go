@@ -73,11 +73,36 @@ func CreateJob(t testing.TB, j models.Job) models.Job {
 // CreateQueuedJob creates a job and a queued job with the given JSON data, and
 // returns the created queued job.
 func CreateQueuedJob(t testing.TB, data json.RawMessage) *models.QueuedJob {
-	return createJobAndQueuedJob(t, SampleJob, data, false)
+	t.Helper()
+	_, qj := createJobAndQueuedJob(t, SampleJob, data, false)
+	return qj
+}
+
+// Like the above but with unique ID's and job names
+func CreateUniqueQueuedJob(t testing.TB, data json.RawMessage) (*models.Job, *models.QueuedJob) {
+	id, _ := types.GenerateUUID("jobname_")
+	j := models.Job{
+		Name:             id.String(),
+		DeliveryStrategy: models.StrategyAtLeastOnce,
+		Attempts:         7,
+		Concurrency:      1,
+	}
+	return createJobAndQueuedJob(t, j, data, true)
+}
+
+func CreateQueuedJobOnly(t testing.TB, name string, data json.RawMessage) *models.QueuedJob {
+	t.Helper()
+	expiresAt := types.NullTime{Valid: false}
+	runAfter := time.Now().UTC()
+	id := RandomId("job_")
+	qj, err := queued_jobs.Enqueue(id, name, runAfter, expiresAt, data)
+	test.AssertNotError(t, err, "")
+	return qj
 }
 
 // CreateQJ creates a job with a random name, and a random UUID.
 func CreateQJ(t testing.TB) *models.QueuedJob {
+	t.Helper()
 	test.SetUp(t)
 	jobname := RandomId("jobtype")
 	job, err := jobs.Create(models.Job{
@@ -99,13 +124,9 @@ func CreateQJ(t testing.TB) *models.QueuedJob {
 	return qj
 }
 
-// CreateRandomQueuedJob creates a queued job with a random UUID.
-func CreateRandomQueuedJob(t *testing.T, data json.RawMessage) *models.QueuedJob {
-	return createJobAndQueuedJob(t, SampleJob, data, true)
-}
-
 func CreateArchivedJob(t *testing.T, data json.RawMessage, status models.JobStatus) *models.ArchivedJob {
-	qj := createJobAndQueuedJob(t, SampleJob, data, false)
+	t.Helper()
+	_, qj := createJobAndQueuedJob(t, SampleJob, data, false)
 	aj, err := archived_jobs.Create(qj.ID, qj.Name, models.StatusSucceeded, qj.Attempts)
 	test.AssertNotError(t, err, "")
 	err = queued_jobs.DeleteRetry(qj.ID, 3)
@@ -114,13 +135,14 @@ func CreateArchivedJob(t *testing.T, data json.RawMessage, status models.JobStat
 }
 
 // CreateAtMostOnceJob creates a queued job that can be run at most once.
-func CreateAtMostOnceJob(t *testing.T, data json.RawMessage) *models.QueuedJob {
+func CreateAtMostOnceJob(t *testing.T, data json.RawMessage) (*models.Job, *models.QueuedJob) {
+	t.Helper()
 	return createJobAndQueuedJob(t, SampleAtMostOnceJob, data, false)
 }
 
-func createJobAndQueuedJob(t testing.TB, j models.Job, data json.RawMessage, randomId bool) *models.QueuedJob {
+func createJobAndQueuedJob(t testing.TB, j models.Job, data json.RawMessage, randomId bool) (*models.Job, *models.QueuedJob) {
 	test.SetUp(t)
-	_, err := jobs.Create(j)
+	job, err := jobs.Create(j)
 	if err != nil {
 		switch dberr := err.(type) {
 		case *dberror.Error:
@@ -143,7 +165,7 @@ func createJobAndQueuedJob(t testing.TB, j models.Job, data json.RawMessage, ran
 	}
 	qj, err := queued_jobs.Enqueue(id, j.Name, runAfter, expiresAt, data)
 	test.AssertNotError(t, err, "")
-	return qj
+	return job, qj
 }
 
 // Processor returns a simple JobProcessor, with a client pointing at the given

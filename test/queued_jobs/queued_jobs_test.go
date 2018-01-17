@@ -36,13 +36,13 @@ func TestEnqueue(t *testing.T) {
 	test.AssertEquals(t, qj.Status, models.StatusQueued)
 
 	diff := time.Since(qj.RunAfter)
-	test.Assert(t, diff < 20*time.Millisecond, "")
+	test.Assert(t, diff < 100*time.Millisecond, "")
 
 	diff = time.Since(qj.CreatedAt)
-	test.Assert(t, diff < 20*time.Millisecond, "")
+	test.Assert(t, diff < 100*time.Millisecond, "")
 
 	diff = time.Since(qj.UpdatedAt)
-	test.Assert(t, diff < 20*time.Millisecond, "")
+	test.Assert(t, diff < 100*time.Millisecond, "")
 }
 
 func TestEnqueueNoData(t *testing.T) {
@@ -285,9 +285,9 @@ func TestCountAll(t *testing.T) {
 	test.AssertEquals(t, allCount, 0)
 	test.AssertEquals(t, readyCount, 0)
 
-	factory.CreateRandomQueuedJob(t, factory.EmptyData)
-	factory.CreateRandomQueuedJob(t, factory.EmptyData)
-	factory.CreateRandomQueuedJob(t, factory.EmptyData)
+	factory.CreateUniqueQueuedJob(t, factory.EmptyData)
+	factory.CreateUniqueQueuedJob(t, factory.EmptyData)
+	factory.CreateUniqueQueuedJob(t, factory.EmptyData)
 	allCount, readyCount, err = queued_jobs.CountReadyAndAll()
 	test.AssertNotError(t, err, "")
 	test.AssertEquals(t, allCount, 3)
@@ -296,24 +296,24 @@ func TestCountAll(t *testing.T) {
 
 func TestCountByStatus(t *testing.T) {
 	defer test.TearDown(t)
-	factory.CreateRandomQueuedJob(t, factory.EmptyData)
-	factory.CreateRandomQueuedJob(t, factory.EmptyData)
-	factory.CreateRandomQueuedJob(t, factory.EmptyData)
+	job, _ := factory.CreateUniqueQueuedJob(t, factory.EmptyData)
+	factory.CreateQueuedJobOnly(t, job.Name, factory.EmptyData)
+	factory.CreateQueuedJobOnly(t, job.Name, factory.EmptyData)
 	factory.CreateAtMostOnceJob(t, factory.EmptyData)
 	m, err := queued_jobs.GetCountsByStatus(models.StatusQueued)
 	test.AssertNotError(t, err, "")
-	test.AssertEquals(t, len(m), 2)
-	test.AssertEquals(t, m["echo"], int64(3))
+	test.Assert(t, len(m) >= 2, "expected at least 2 queued jobs in the database")
+	test.AssertEquals(t, m[job.Name], int64(3))
 	test.AssertEquals(t, m["at-most-once"], int64(1))
 }
 
 func TestOldInProgress(t *testing.T) {
 	defer test.TearDown(t)
-	qj1 := factory.CreateRandomQueuedJob(t, factory.EmptyData)
-	qj2 := factory.CreateRandomQueuedJob(t, factory.EmptyData)
+	_, qj1 := factory.CreateUniqueQueuedJob(t, factory.EmptyData)
+	_, qj2 := factory.CreateUniqueQueuedJob(t, factory.EmptyData)
 	_, err := queued_jobs.Acquire(qj1.Name)
 	test.AssertNotError(t, err, "")
-	_, err = queued_jobs.Acquire(qj1.Name)
+	_, err = queued_jobs.Acquire(qj2.Name)
 	test.AssertNotError(t, err, "")
 	jobs, err := queued_jobs.GetOldInProgressJobs(time.Now().UTC().Add(40 * time.Millisecond))
 	test.AssertNotError(t, err, "")
