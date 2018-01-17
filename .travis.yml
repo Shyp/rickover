@@ -2,17 +2,17 @@ language: go
 go_import_path: github.com/Shyp/rickover
 
 go:
-  - 1.5
-  - 1.6
-  - 1.7
-  - 1.8
-  - tip
+  - 1.6.x
+  - 1.7.x
+  - 1.8.x
+  - 1.9.x
+  - master
 
 script: make lint race-test bench
 
 before_script:
   - make test-install
-  - go get github.com/kevinburke/goose/cmd/goose
+  - go get -u github.com/kevinburke/goose/cmd/goose
   - goose --env=travis up
 
 addons:
