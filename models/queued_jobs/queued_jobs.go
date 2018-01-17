@@ -8,8 +8,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/Shyp/rickover/Godeps/_workspace/src/github.com/Shyp/go-dberror"
-	"github.com/Shyp/rickover/Godeps/_workspace/src/github.com/Shyp/go-types"
+	"github.com/Shyp/go-dberror"
+	"github.com/Shyp/go-types"
 	"github.com/Shyp/rickover/models"
 	"github.com/Shyp/rickover/models/db"
 )

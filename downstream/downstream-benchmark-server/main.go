@@ -11,7 +11,7 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/Shyp/rickover/Godeps/_workspace/src/github.com/gorilla/handlers"
+	"github.com/gorilla/handlers"
 )
 
 var accepted = []byte("{\"status\": \"accepted\"}")

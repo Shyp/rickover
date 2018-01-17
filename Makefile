@@ -1,6 +1,6 @@
-.PHONY: install test race-test
+.PHONY: test race-test
 
-SHELL = /bin/bash -x -o pipefail
+SHELL = /bin/bash -o pipefail
 
 ifdef DATABASE_URL
 	DATABASE_URL := $(DATABASE_URL)
@@ -14,6 +14,11 @@ BENCHSTAT := $(GOPATH)/bin/benchstat
 BUMP_VERSION := $(GOPATH)/bin/bump_version
 GODOCDOC := $(GOPATH)/bin/godocdoc
 GOOSE := $(GOPATH)/bin/goose
+TRUNCATE_TABLES := $(GOPATH)/bin/rickover-truncate-tables
+
+# Just run it every time, we could get fancy with find() tricks, but eh.
+$(TRUNCATE_TABLES):
+	go install ./test/rickover-truncate-tables
 
 test-install:
 	-createuser rickover --superuser --createrole --createdb --inherit
@@ -21,13 +26,10 @@ test-install:
 	-createdb rickover_test --owner=rickover
 
 lint:
-	go vet ./...
+	go list ./... | grep -v vendor | xargs go vet
 
 build:
 	go build ./...
-
-install:
-	go install ./...
 
 $(GODOCDOC):
 	go get -u github.com/kevinburke/godocdoc
@@ -36,17 +38,17 @@ docs: | $(GODOCDOC)
 	$(GODOCDOC)
 
 testonly:
-	@DATABASE_URL=$(TEST_DATABASE_URL) go test -p 1 ./... -timeout 2s
+	@DATABASE_URL=$(TEST_DATABASE_URL) go list ./... | grep -v vendor | xargs go test -timeout 10s
 
 race-testonly:
-	@DATABASE_URL=$(TEST_DATABASE_URL) go test -p 1 -race -v ./... -timeout 2s
+	@DATABASE_URL=$(TEST_DATABASE_URL) go list ./... | grep -v vendor | xargs go test -race -timeout 10s
 
-truncate-test:
-	@DATABASE_URL=$(TEST_DATABASE_URL) rickover-truncate-tables
+truncate-test: $(TRUNCATE_TABLES)
+	@DATABASE_URL=$(TEST_DATABASE_URL) $(TRUNCATE_TABLES)
 
-race-test: install race-testonly truncate-test
+race-test: race-testonly truncate-test
 
-test: install testonly truncate-test
+test: testonly truncate-test
 
 serve:
 	@DATABASE_URL=$(DATABASE_URL) go run commands/server/main.go

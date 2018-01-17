@@ -3,7 +3,7 @@ package downstream
 import (
 	"encoding/json"
 
-	"github.com/Shyp/rickover/Godeps/_workspace/src/github.com/Shyp/go-types"
+	"github.com/Shyp/go-types"
 )
 
 // Create a new client, then make a request to a downstream service with an

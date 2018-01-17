@@ -8,7 +8,7 @@ import (
 	"testing"
 	"time"
 
-	types "github.com/Shyp/rickover/Godeps/_workspace/src/github.com/Shyp/go-types"
+	types "github.com/Shyp/go-types"
 	"github.com/Shyp/rickover/server"
 	"github.com/Shyp/rickover/test"
 	"github.com/Shyp/rickover/test/factory"

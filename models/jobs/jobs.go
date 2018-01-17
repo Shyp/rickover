@@ -7,10 +7,10 @@ import (
 	"fmt"
 	"time"
 
-	dberror "github.com/Shyp/rickover/Godeps/_workspace/src/github.com/Shyp/go-dberror"
-	"github.com/Shyp/rickover/Godeps/_workspace/src/github.com/lib/pq"
+	dberror "github.com/Shyp/go-dberror"
 	"github.com/Shyp/rickover/models"
 	"github.com/Shyp/rickover/models/db"
+	"github.com/lib/pq"
 )
 
 func init() {

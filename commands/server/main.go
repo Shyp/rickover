@@ -12,12 +12,12 @@ import (
 	"os"
 	"time"
 
-	"github.com/Shyp/rickover/Godeps/_workspace/src/github.com/Shyp/go-simple-metrics"
-	"github.com/Shyp/rickover/Godeps/_workspace/src/github.com/gorilla/handlers"
+	"github.com/Shyp/go-simple-metrics"
 	"github.com/Shyp/rickover/config"
 	"github.com/Shyp/rickover/models/db"
 	"github.com/Shyp/rickover/server"
 	"github.com/Shyp/rickover/setup"
+	"github.com/gorilla/handlers"
 )
 
 func configure() (http.Handler, error) {

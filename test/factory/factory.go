@@ -6,9 +6,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/Shyp/rickover/Godeps/_workspace/src/github.com/Shyp/go-dberror"
-	"github.com/Shyp/rickover/Godeps/_workspace/src/github.com/Shyp/go-types"
-	"github.com/Shyp/rickover/Godeps/_workspace/src/github.com/nu7hatch/gouuid"
+	"github.com/Shyp/go-dberror"
+	"github.com/Shyp/go-types"
 	"github.com/Shyp/rickover/downstream"
 	"github.com/Shyp/rickover/models"
 	"github.com/Shyp/rickover/models/archived_jobs"
@@ -16,6 +15,7 @@ import (
 	"github.com/Shyp/rickover/models/queued_jobs"
 	"github.com/Shyp/rickover/services"
 	"github.com/Shyp/rickover/test"
+	"github.com/nu7hatch/gouuid"
 )
 
 var EmptyData = json.RawMessage([]byte("{}"))
