@@ -15,6 +15,9 @@ before_script:
   - go get -u github.com/kevinburke/goose/cmd/goose
   - goose --env=travis up
 
+env:
+  - GOPATH=/home/travis/gopath
+
 addons:
   postgresql: "9.5"
 
