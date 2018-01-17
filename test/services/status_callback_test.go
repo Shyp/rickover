@@ -26,10 +26,10 @@ func TestStatusCallbackInsertsArchivedRecordDeletesQueuedRecord(t *testing.T) {
 	test.AssertEquals(t, aj.Status, models.StatusSucceeded)
 }
 
-func TestStatusCallbackFailedInsertsArchivedRecord(t *testing.T) {
-	defer test.TearDown(t)
-	qj := factory.CreateQueuedJob(t, factory.EmptyData)
-	err := services.HandleStatusCallback(qj.ID, "echo", models.StatusFailed, 1, true)
+func testStatusCallbackFailedInsertsArchivedRecord(t *testing.T) {
+	t.Parallel()
+	job, qj := factory.CreateUniqueQueuedJob(t, factory.EmptyData)
+	err := services.HandleStatusCallback(qj.ID, job.Name, models.StatusFailed, 1, true)
 	test.AssertNotError(t, err, "")
 	_, err = queued_jobs.Get(qj.ID)
 	test.AssertEquals(t, err, queued_jobs.ErrNotFound)
@@ -50,10 +50,10 @@ func TestStatusCallbackFailedAtMostOnceInsertsArchivedRecord(t *testing.T) {
 	test.AssertEquals(t, aj.ID.String(), qj.ID.String())
 }
 
-func TestStatusCallbackFailedAtLeastOnceUpdatesQueuedRecord(t *testing.T) {
-	defer test.TearDown(t)
-	qj := factory.CreateQueuedJob(t, factory.EmptyData)
-	err := services.HandleStatusCallback(qj.ID, "echo", models.StatusFailed, 7, true)
+func testStatusCallbackFailedAtLeastOnceUpdatesQueuedRecord(t *testing.T) {
+	t.Parallel()
+	job, qj := factory.CreateUniqueQueuedJob(t, factory.EmptyData)
+	err := services.HandleStatusCallback(qj.ID, job.Name, models.StatusFailed, 7, true)
 	test.AssertNotError(t, err, "")
 
 	qj, err = queued_jobs.Get(qj.ID)
@@ -64,7 +64,7 @@ func TestStatusCallbackFailedAtLeastOnceUpdatesQueuedRecord(t *testing.T) {
 	test.AssertEquals(t, err, archived_jobs.ErrNotFound)
 }
 
-func TestStatusCallbackFailedNotRetryableArchivesRecord(t *testing.T) {
+func testStatusCallbackFailedNotRetryableArchivesRecord(t *testing.T) {
 	t.Parallel()
 	qj := factory.CreateQJ(t)
 	err := services.HandleStatusCallback(qj.ID, qj.Name, models.StatusFailed, qj.Attempts, false)

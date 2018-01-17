@@ -27,6 +27,22 @@ var sampleJob = models.Job{
 	Concurrency:      1,
 }
 
+func TestAll(t *testing.T) {
+	test.SetUp(t)
+	defer test.TearDown(t)
+	t.Run("Parallel", func(t *testing.T) {
+		// Parallel tests go here
+		t.Run("TestEnqueueUnknownJobTypeErrNoRows", testEnqueueUnknownJobTypeErrNoRows)
+		t.Run("TestNonexistentReturnsErrNoRows", testNonexistentReturnsErrNoRows)
+		t.Run("TestDeleteNonexistentJobReturnsErrNoRows", testDeleteNonexistentJobReturnsErrNoRows)
+		t.Run("TestGetQueuedJob", testGetQueuedJob)
+		t.Run("TestDeleteQueuedJob", testDeleteQueuedJob)
+		t.Run("TestAcquireReturnsCorrectValues", testAcquireReturnsCorrectValues)
+		t.Run("TestEnqueueNoData", testEnqueueNoData)
+		t.Run("EnqueueWithExistingArchivedJobFails", testEnqueueWithExistingArchivedJobFails)
+	})
+}
+
 func TestEnqueue(t *testing.T) {
 	defer test.TearDown(t)
 	qj := factory.CreateQueuedJob(t, factory.EmptyData)
@@ -45,16 +61,23 @@ func TestEnqueue(t *testing.T) {
 	test.Assert(t, diff < 100*time.Millisecond, "")
 }
 
-func TestEnqueueNoData(t *testing.T) {
-	test.SetUp(t)
-	defer test.TearDown(t)
-	_, err := jobs.Create(sampleJob)
+func testEnqueueNoData(t *testing.T) {
+	t.Parallel()
+	id, _ := types.GenerateUUID("jobname_")
+	j := models.Job{
+		Name:             id.String(),
+		DeliveryStrategy: models.StrategyAtLeastOnce,
+		Attempts:         7,
+		Concurrency:      1,
+	}
+	_, err := jobs.Create(j)
 	test.AssertNotError(t, err, "")
 
 	expiresAt := types.NullTime{Valid: false}
 	runAfter := time.Now().UTC()
 
-	_, err = queued_jobs.Enqueue(factory.JobId, "echo", runAfter, expiresAt, []byte{})
+	qjid, _ := types.GenerateUUID("job_")
+	_, err = queued_jobs.Enqueue(qjid, j.Name, runAfter, expiresAt, []byte{})
 	test.AssertError(t, err, "")
 	switch terr := err.(type) {
 	case *dberror.Error:
@@ -89,9 +112,8 @@ func TestEnqueueJobExists(t *testing.T) {
 	}
 }
 
-func TestEnqueueUnknownJobTypeErrNoRows(t *testing.T) {
+func testEnqueueUnknownJobTypeErrNoRows(t *testing.T) {
 	t.Parallel()
-	test.SetUp(t)
 
 	expiresAt := types.NullTime{Valid: false}
 	runAfter := time.Now().UTC()
@@ -100,45 +122,42 @@ func TestEnqueueUnknownJobTypeErrNoRows(t *testing.T) {
 	test.AssertEquals(t, err.Error(), "Job type unknownJob does not exist or the job with that id has already been archived")
 }
 
-func TestEnqueueWithExistingArchivedJobFails(t *testing.T) {
-	qj := factory.CreateQueuedJob(t, factory.EmptyData)
-	defer test.TearDown(t)
+func testEnqueueWithExistingArchivedJobFails(t *testing.T) {
+	t.Parallel()
+	_, qj := factory.CreateUniqueQueuedJob(t, factory.EmptyData)
 	err := services.HandleStatusCallback(qj.ID, qj.Name, models.StatusSucceeded, qj.Attempts, true)
 	test.AssertNotError(t, err, "")
 	expiresAt := types.NullTime{Valid: false}
 	runAfter := time.Now().UTC()
-	_, err = queued_jobs.Enqueue(qj.ID, "echo", runAfter, expiresAt, empty)
+	_, err = queued_jobs.Enqueue(qj.ID, qj.Name, runAfter, expiresAt, empty)
 	test.AssertError(t, err, "")
-	test.AssertEquals(t, err.Error(), "Job type echo does not exist or the job with that id has already been archived")
+	test.AssertEquals(t, err.Error(), "Job type "+qj.Name+" does not exist or the job with that id has already been archived")
 }
 
-func TestNonexistentReturnsErrNoRows(t *testing.T) {
+func testNonexistentReturnsErrNoRows(t *testing.T) {
 	t.Parallel()
-	test.SetUp(t)
 	id, _ := types.NewPrefixUUID("job_a9173b65-7714-42b4-85f2-8336f6d12180")
 	_, err := queued_jobs.Get(id)
 	test.AssertEquals(t, err, queued_jobs.ErrNotFound)
 }
 
-func TestGetQueuedJob(t *testing.T) {
-	defer test.TearDown(t)
-	qj := factory.CreateQueuedJob(t, factory.EmptyData)
+func testGetQueuedJob(t *testing.T) {
+	t.Parallel()
+	_, qj := factory.CreateUniqueQueuedJob(t, factory.EmptyData)
 	gotQj, err := queued_jobs.Get(qj.ID)
 	test.AssertNotError(t, err, "")
-	test.AssertEquals(t, gotQj.ID.String(), "job_6740b44e-13b9-475d-af06-979627e0e0d6")
+	test.AssertEquals(t, gotQj.ID.String(), qj.ID.String())
 }
 
-func TestDeleteQueuedJob(t *testing.T) {
-	defer test.TearDown(t)
-	qj := factory.CreateQueuedJob(t, factory.EmptyData)
+func testDeleteQueuedJob(t *testing.T) {
+	t.Parallel()
+	_, qj := factory.CreateUniqueQueuedJob(t, factory.EmptyData)
 	err := queued_jobs.Delete(qj.ID)
 	test.AssertNotError(t, err, "")
 }
 
-func TestDeleteNonexistentJobReturnsErrNoRows(t *testing.T) {
+func testDeleteNonexistentJobReturnsErrNoRows(t *testing.T) {
 	t.Parallel()
-	test.SetUp(t)
-	defer test.TearDown(t)
 	err := queued_jobs.Delete(factory.RandomId("job_"))
 	test.AssertEquals(t, err, queued_jobs.ErrNotFound)
 }
@@ -192,16 +211,16 @@ func TestDataRoundtrip(t *testing.T) {
 	test.AssertEquals(t, len(u.Pickups), 2)
 
 	diff := time.Since(u.CreatedAt)
-	test.Assert(t, diff < 30*time.Millisecond, "")
+	test.Assert(t, diff < 100*time.Millisecond, "")
 }
 
-func TestAcquireReturnsCorrectValues(t *testing.T) {
-	defer test.TearDown(t)
-	factory.CreateQueuedJob(t, factory.EmptyData)
+func testAcquireReturnsCorrectValues(t *testing.T) {
+	t.Parallel()
+	job, qj := factory.CreateUniqueQueuedJob(t, factory.EmptyData)
 
-	gotQj, err := queued_jobs.Acquire(sampleJob.Name)
+	gotQj, err := queued_jobs.Acquire(job.Name)
 	test.AssertNotError(t, err, "")
-	test.AssertEquals(t, gotQj.ID.String(), factory.JobId.String())
+	test.AssertEquals(t, gotQj.ID.String(), qj.ID.String())
 	test.AssertEquals(t, gotQj.Status, models.StatusInProgress)
 }
 

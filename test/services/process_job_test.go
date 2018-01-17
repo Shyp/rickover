@@ -21,9 +21,19 @@ import (
 	"github.com/nu7hatch/gouuid"
 )
 
-func TestExpiredJobNotEnqueued(t *testing.T) {
-	t.Parallel()
+func TestAll(t *testing.T) {
 	test.SetUp(t)
+	defer test.TearDown(t)
+	t.Run("Parallel", func(t *testing.T) {
+		t.Run("ExpiredJobNotEnqueued", testExpiredJobNotEnqueued)
+		t.Run("StatusCallbackFailedNotRetryableArchivesRecord", testStatusCallbackFailedNotRetryableArchivesRecord)
+		t.Run("StatusCallbackFailedAtLeastOnceUpdatesQueuedRecord", testStatusCallbackFailedAtLeastOnceUpdatesQueuedRecord)
+		t.Run("TestStatusCallbackFailedInsertsArchivedRecord", testStatusCallbackFailedInsertsArchivedRecord)
+	})
+}
+
+func testExpiredJobNotEnqueued(t *testing.T) {
+	t.Parallel()
 
 	c1 := make(chan bool, 1)
 	s := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -48,7 +58,7 @@ func TestExpiredJobNotEnqueued(t *testing.T) {
 		case <-c1:
 			t.Fatalf("worker made a request to the server")
 			return
-		case <-time.After(40 * time.Millisecond):
+		case <-time.After(60 * time.Millisecond):
 			return
 		}
 	}

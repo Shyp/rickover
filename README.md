@@ -499,6 +499,15 @@ boom -n 30000 -c 100 -d '{"data": {"user-agent": "boom"}}' -m PUT http://localho
 
 [boom]: https://github.com/rakyll/boom
 
+## Testing
+
+Tests hit the database, and should either be able to run in parallel with other
+tests or clean up after themselves.
+
+Note you must run tests with `-p=1`, so packages are tested in turn. Otherwise
+`t.Parallel()` will run parallel tests from different suites at the same time as
+each other, which we currently don't support.
+
 ## Supported versions
 
 The database uses `jsonb`, which is only available in Postgres 9.4 and beyond.

@@ -20,11 +20,18 @@ func SetUp(t testing.TB) {
 }
 
 // TruncateTables deletes all records from the database.
-func TruncateTables() error {
+func TruncateTables(t testing.TB) error {
 	getTableDelete := func(table string) string {
-		return fmt.Sprintf("DELETE FROM %[1]s", table)
+		return "DELETE FROM " + table
 	}
-	_, err := db.Conn.Exec(fmt.Sprintf("BEGIN; %s;\n%s;\n%s; COMMIT",
+	var name string
+	if t == nil {
+		name = "TruncateTables"
+	} else {
+		name = t.Name()
+	}
+	_, err := db.Conn.Exec(fmt.Sprintf("-- %s\n%s;\n%s;\n%s",
+		name,
 		getTableDelete("archived_jobs"),
 		getTableDelete("queued_jobs"),
 		getTableDelete("jobs"),
@@ -37,7 +44,7 @@ func TruncateTables() error {
 func TearDown(t testing.TB) {
 	t.Helper()
 	if db.Connected() {
-		if err := TruncateTables(); err != nil {
+		if err := TruncateTables(t); err != nil {
 			t.Fatal(err)
 		}
 	}

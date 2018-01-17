@@ -13,9 +13,18 @@ import (
 	"github.com/Shyp/rickover/test/factory"
 )
 
-func TestWorkerShutsDown(t *testing.T) {
-	t.Parallel()
+func TestAll(t *testing.T) {
 	test.SetUp(t)
+	defer test.TearDown(t)
+	t.Run("Parallel", func(t *testing.T) {
+		t.Run("TestWorkerShutsDown", testWorkerShutsDown)
+		t.Run("TestWorkerMakesCorrectRequest", testWorkerMakesCorrectRequest)
+		t.Run("TestWorkerMakesExactlyOneRequest", testWorkerMakesCorrectRequest)
+	})
+}
+
+func testWorkerShutsDown(t *testing.T) {
+	t.Parallel()
 	poolname := factory.RandomId("pool")
 	pool := dequeuer.NewPool(poolname.String())
 	for i := 0; i < 3; i++ {
@@ -37,36 +46,11 @@ func TestWorkerShutsDown(t *testing.T) {
 	}
 }
 
-func TestCreatePools(t *testing.T) {
-	test.SetUp(t)
-	// in case the other parallel tests didn't clean up after themselves
-	test.AssertNotError(t, test.TruncateTables(), "truncate tables")
-	defer test.TearDown(t)
-	qj := factory.CreateQJ(t)
-	factory.CreateQJ(t)
-	proc := factory.Processor("http://example.com")
-	pools, err := dequeuer.CreatePools(proc, 0)
-	test.AssertNotError(t, err, "CreatePools")
-	test.AssertEquals(t, len(pools), 2)
-	foundPool := false
-	for _, pool := range pools {
-		if pool.Name == qj.Name {
-			foundPool = true
-			test.AssertEquals(t, len(pool.Dequeuers), 3)
-			for i, dq := range pool.Dequeuers {
-				test.AssertEquals(t, dq.ID, i+1)
-				test.AssertEquals(t, dq.W, proc)
-			}
-		}
-	}
-	test.Assert(t, foundPool, "Didn't create a pool for the job type")
-}
-
 // 1. Create a job type
 // 2. Enqueue a job
 // 3. Create a test server that replies with a 202
 // 4. Ensure that the correct request is made to the server
-func TestWorkerMakesCorrectRequest(t *testing.T) {
+func testWorkerMakesCorrectRequest(t *testing.T) {
 	t.Parallel()
 	qj := factory.CreateQJ(t)
 
@@ -113,7 +97,7 @@ func TestWorkerMakesCorrectRequest(t *testing.T) {
 // 2a. Create twenty worker nodes
 // 3. Create a test server that replies with a 202
 // 4. Ensure that only one request is made to the server
-func TestWorkerMakesExactlyOneRequest(t *testing.T) {
+func testWorkerMakesExactlyOneRequest(t *testing.T) {
 	t.Parallel()
 	qj := factory.CreateQJ(t)
 
@@ -141,4 +125,27 @@ func TestWorkerMakesExactlyOneRequest(t *testing.T) {
 			return
 		}
 	}
+}
+
+func TestCreatePools(t *testing.T) {
+	test.SetUp(t)
+	defer test.TearDown(t)
+	qj := factory.CreateQJ(t)
+	factory.CreateQJ(t)
+	proc := factory.Processor("http://example.com")
+	pools, err := dequeuer.CreatePools(proc, 0)
+	test.AssertNotError(t, err, "CreatePools")
+	test.AssertEquals(t, len(pools), 2)
+	foundPool := false
+	for _, pool := range pools {
+		if pool.Name == qj.Name {
+			foundPool = true
+			test.AssertEquals(t, len(pool.Dequeuers), 3)
+			for i, dq := range pool.Dequeuers {
+				test.AssertEquals(t, dq.ID, i+1)
+				test.AssertEquals(t, dq.W, proc)
+			}
+		}
+	}
+	test.Assert(t, foundPool, "Didn't create a pool for the job type")
 }

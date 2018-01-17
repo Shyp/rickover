@@ -23,11 +23,12 @@ var sampleJob = models.Job{
 func TestAll(t *testing.T) {
 	test.SetUp(t)
 	defer test.TearDown(t)
-	// Put parallel tests here.
-	t.Run("testCreateJobReturnsJob", testCreateJobReturnsJob)
-	t.Run("TestCreateArchivedJobWithNoQueuedReturnsErrNoRows", testCreateArchivedJobWithNoQueuedReturnsErrNoRows)
-	t.Run("TestArchivedJobFailsIfJobExists", testArchivedJobFailsIfJobExists)
-	t.Run("TestCreateJobStoresJob", testCreateJobStoresJob)
+	t.Run("Parallel", func(t *testing.T) {
+		t.Run("testCreateJobReturnsJob", testCreateJobReturnsJob)
+		t.Run("TestCreateArchivedJobWithNoQueuedReturnsErrNoRows", testCreateArchivedJobWithNoQueuedReturnsErrNoRows)
+		t.Run("TestArchivedJobFailsIfJobExists", testArchivedJobFailsIfJobExists)
+		t.Run("TestCreateJobStoresJob", testCreateJobStoresJob)
+	})
 }
 
 // Test that creating an archived job returns the job

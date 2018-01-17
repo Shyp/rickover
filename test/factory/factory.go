@@ -3,6 +3,7 @@ package factory
 
 import (
 	"encoding/json"
+	"fmt"
 	"testing"
 	"time"
 
@@ -164,7 +165,7 @@ func createJobAndQueuedJob(t testing.TB, j models.Job, data json.RawMessage, ran
 		id = JobId
 	}
 	qj, err := queued_jobs.Enqueue(id, j.Name, runAfter, expiresAt, data)
-	test.AssertNotError(t, err, "")
+	test.AssertNotError(t, err, fmt.Sprintf("Error creating queued job %s (job name %s)", id, j.Name))
 	return job, qj
 }
 

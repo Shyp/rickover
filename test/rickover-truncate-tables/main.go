@@ -12,7 +12,7 @@ func main() {
 	if err := setup.DB(db.DefaultConnection, 1); err != nil {
 		log.Fatal(err)
 	}
-	if err := test.TruncateTables(); err != nil {
+	if err := test.TruncateTables(nil); err != nil {
 		log.Fatal(err)
 	}
 }

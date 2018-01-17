@@ -38,10 +38,10 @@ docs: | $(GODOCDOC)
 	$(GODOCDOC)
 
 testonly:
-	@DATABASE_URL=$(TEST_DATABASE_URL) go list ./... | grep -v vendor | xargs go test -timeout 10s
+	@DATABASE_URL=$(TEST_DATABASE_URL) go list ./... | grep -v vendor | xargs go test -p=1 -timeout 10s
 
 race-testonly:
-	DATABASE_URL=$(TEST_DATABASE_URL) go list ./... | grep -v vendor | xargs go test -v -race -timeout 10s
+	DATABASE_URL=$(TEST_DATABASE_URL) go list ./... | grep -v vendor | xargs go test -p=1 -race -timeout 10s
 
 truncate-test: $(TRUNCATE_TABLES)
 	@DATABASE_URL=$(TEST_DATABASE_URL) $(TRUNCATE_TABLES)
@@ -75,4 +75,4 @@ $(BENCHSTAT):
 	go get -u golang.org/x/perf/cmd/benchstat
 
 bench: | $(BENCHSTAT)
-	tmp=$$(mktemp); go list ./... | grep -v vendor | xargs go test -benchtime=2s -bench=. -run='^$$' > "$$tmp" 2>&1 && $(BENCHSTAT) "$$tmp"
+	tmp=$$(mktemp); go list ./... | grep -v vendor | xargs go test -p=1 -benchtime=2s -bench=. -run='^$$' > "$$tmp" 2>&1 && $(BENCHSTAT) "$$tmp"
