@@ -10,11 +10,11 @@ import (
 	"time"
 
 	"github.com/Shyp/go-types"
+	"github.com/Shyp/rest"
 	"github.com/Shyp/rickover/models"
 	"github.com/Shyp/rickover/models/archived_jobs"
 	"github.com/Shyp/rickover/models/jobs"
 	"github.com/Shyp/rickover/models/queued_jobs"
-	"github.com/Shyp/rickover/rest"
 	"github.com/Shyp/rickover/services"
 	"github.com/Shyp/rickover/test"
 	"github.com/Shyp/rickover/test/factory"

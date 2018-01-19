@@ -3,7 +3,7 @@ package server
 import (
 	"net/http"
 
-	"github.com/Shyp/rickover/rest"
+	"github.com/Shyp/rest"
 )
 
 type auther struct{}

@@ -6,7 +6,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/Shyp/rickover/rest"
+	"github.com/Shyp/rest"
 	"github.com/Shyp/rickover/test"
 )
 

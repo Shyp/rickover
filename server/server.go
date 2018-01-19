@@ -19,12 +19,12 @@ import (
 	"github.com/Shyp/go-dberror"
 	"github.com/Shyp/go-simple-metrics"
 	"github.com/Shyp/go-types"
+	"github.com/Shyp/rest"
 	"github.com/Shyp/rickover/config"
 	"github.com/Shyp/rickover/models"
 	"github.com/Shyp/rickover/models/archived_jobs"
 	"github.com/Shyp/rickover/models/jobs"
 	"github.com/Shyp/rickover/models/queued_jobs"
-	"github.com/Shyp/rickover/rest"
 )
 
 // TODO(burke) use http.LimitedBytesReader.

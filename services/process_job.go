@@ -10,10 +10,10 @@ import (
 	"time"
 
 	"github.com/Shyp/go-simple-metrics"
+	"github.com/Shyp/rest"
 	"github.com/Shyp/rickover/downstream"
 	"github.com/Shyp/rickover/models"
 	"github.com/Shyp/rickover/models/queued_jobs"
-	"github.com/Shyp/rickover/rest"
 )
 
 // 10ms * 2^10 ~ 10 seconds between attempts

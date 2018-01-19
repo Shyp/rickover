@@ -1,0 +1,17 @@
+language: go
+go_import_path: github.com/kevinburke/rest
+
+os: linux
+dist: trusty
+
+sudo: required
+
+before_script:
+  - make install-travis
+
+script:
+  - make ci
+
+cache:
+  directories:
+    - $HOME/.bzrepos

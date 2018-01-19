@@ -9,8 +9,8 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"github.com/Shyp/rest"
 	"github.com/Shyp/rickover/models"
-	"github.com/Shyp/rickover/rest"
 	"github.com/Shyp/rickover/test"
 )
 
@@ -25,9 +25,7 @@ func Test405WrongMethod(t *testing.T) {
 	test.AssertEquals(t, w.Code, http.StatusMethodNotAllowed)
 	var e rest.Error
 	err = json.Unmarshal(w.Body.Bytes(), &e)
-	if err != nil {
-		t.Fatal(err)
-	}
+	test.AssertNotError(t, err, "")
 	test.AssertEquals(t, e.Title, "Method not allowed")
 	test.AssertEquals(t, e.Instance, "/v1/jobs")
 }

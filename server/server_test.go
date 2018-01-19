@@ -8,8 +8,8 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/Shyp/rest"
 	"github.com/Shyp/rickover/config"
-	"github.com/Shyp/rickover/rest"
 	"github.com/Shyp/rickover/test"
 )
 

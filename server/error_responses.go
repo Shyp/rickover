@@ -8,7 +8,7 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/Shyp/rickover/rest"
+	"github.com/Shyp/rest"
 )
 
 func new405(r *http.Request) *rest.Error {

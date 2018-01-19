@@ -7,7 +7,7 @@ import (
 	"net/http"
 	"sync"
 
-	"github.com/Shyp/rickover/rest"
+	"github.com/Shyp/rest"
 )
 
 var DefaultAuthorizer = NewSharedSecretAuthorizer()

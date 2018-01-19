@@ -16,7 +16,7 @@ import (
 	"os"
 	"time"
 
-	"github.com/Shyp/rickover/rest"
+	"github.com/Shyp/rest"
 )
 
 const defaultHTTPTimeout = 6500 * time.Millisecond
@@ -40,12 +40,9 @@ type Client struct {
 
 // NewClient creates a new Client.
 func NewClient(id, token, base string) *Client {
-	c := &Client{&rest.Client{
-		ID:     id,
-		Token:  token,
-		Client: &http.Client{Timeout: defaultHTTPTimeout},
-		Base:   base,
-	}, nil}
-	c.Job = &JobService{Client: c}
-	return c
+	rc := rest.NewClient(id, token, base)
+	rc.Client = &http.Client{Timeout: defaultHTTPTimeout}
+	downstreamClient := &Client{Client: rc, Job: nil}
+	downstreamClient.Job = &JobService{Client: downstreamClient}
+	return downstreamClient
 }
